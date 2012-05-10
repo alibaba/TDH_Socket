@@ -1,0 +1,49 @@
+﻿1.构建TDH_Socket
+    TDH_Socket现在包含libeasy,libtdhs,TDHSocket.
+    libeasy是公用的网络库
+    libtdhs是公用的工具库
+    TDHSocket是MySQL的daemon plugin
+    构建TDH_Socket需要MySQL的源码和MySQL编译完成后的二进制文件,TDH_Socket目前支持MySQL 5.1 和 MySQL 5.5 极其衍生版本.
+    需要确认MySQL的源码和MySQL二进制文件能够匹配起来,否则可能会出现一些不可预知的情况(比如MySQL服务器Crash)
+    
+    编译步骤:
+    1) 通过MySQL源码编译好MySQL
+    	a)例如源码路径/sources/mysql-5.1.48
+    	b)例如编译好的MySQL目录/usr/mysql
+    2)编译TDH_Socket
+      a) $ ./bootstrap.sh
+      b) $ ./configure  --with-mysql-source=/sources/mysql-5.1.48 --with-mysql-bindir=/usr/mysql/bin --with-mysql-plugindir=/usr/mysql/lib/plugin
+          i)   --with-mysql-source 指向MySQL的源码路径
+          ii)  --with-mysql-bindir 指向MySQL的二进制文件路径,主要为了通过 ${with-mysql-bindir}/bin/mysql_config 来获取一些编译参数
+          iii) --with-mysql-plugindir 指向生成的tdhsocket.so的安装路径,需要指向MySQL的plugin目录
+          iv)  --enable-mysql-debug 如果MySQL编译时设置DEBUG_ON,那么也需要开启起此选项来匹配编译,否则可能会出现Crash
+          v)   --enable-tdhs-debug 开启TDH_Socket的一些assert校验(默认关闭)
+          vi)  --enable-tdhs-row-cache 开启Row Cache优化,如果你的MySQL版本包含了Row Cache,那么可以开启此选项来优化性能,对于流控来说可以提高流控的准确性 关于Row Cache 可以见/row_cache 目录
+      c) $ make
+      d) $ sudo make install
+      
+2.TDH_Socket的使用
+    在my.cnf中添加
+    [mysqld]
+    #指定TDH_Socket的监听端口号
+    tdh_socket_listen_port = 8888 
+    #其他配置项见variable文件的描述
+    
+    用root账户登陆到mysql中执行 
+    mysql> install plugin tdh_socket soname 'tdhsocket.so';
+    以激活TDH_Socket
+    可以通过
+    mysql> show processlist;
+    看到TDH_Socket的线程在工作了
+    
+3.TDH_Socket的客户端
+   目前在项目中包含了Java客户端和Python客户端
+   1) Java客户端 见/java目录
+     a)Java客户端是一个高性能的客户端,基于Netty,并且支持JDBC,对于应用来说迁移起来很方便
+     b)直接用法见/java/src/test/java/benchmark目录,这个目录下提供了一些常见的性能评估工具
+     c)JDBC用法见/java/src/test/java/com/taobao/tdhs/client/jdbc/test 下的测试用例
+     d)结合MyBatis的用法见 /java/src/test/java/com/taobao/tdhs/client/jdbc/test/mybatis 下的测试用例 
+   2) Python客户端 见/python目录
+     b) Python客户端主要提供方便调试用.是一个堵塞io的客户端
+     c) 用法见 /python/test下的用例
+    

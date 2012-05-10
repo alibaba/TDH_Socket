@@ -1,0 +1,19 @@
+﻿设计文档
+
+结构图可见:structure.png
+
+TDH_Socket采用动态IO策略
+	IO线程处理的处理逻辑 主要源码:tdh_socket_handler.cpp
+	IO线程处理 
+	   1.解码和编码包,以及相关的网络操作 源码:tdh_socket_protocol.cpp
+	   2.握手请求 源码:tdh_socket_connection_context.cpp
+	   3.认证 源码:tdh_socket_share.cpp
+	   4.请求的分派 源码: tdh_socket_handler.cpp
+	     a)读写请求的分派
+	     b)物理读和逻辑读请求的分派 具体源码:tdh_socket_optimize.cpp
+	     c)对物理读请求的流控 具体源码:tdh_socket_share.cpp
+	Request线程处理的逻辑
+		 1.Group Commit逻辑 源码:tdh_socket_request_thread.cpp
+		 2.具体的数据库操作 源码:tdh_socket_dbcontext.cpp
+		 
+会有一个监控线程来判断当前数据库的状态 源码:tdh_socket_monitor.cpp

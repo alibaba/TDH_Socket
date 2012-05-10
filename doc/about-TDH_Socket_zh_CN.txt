@@ -1,0 +1,35 @@
+﻿----------------------------------------------------------------------
+TDH_Socket plugin for MySQL
+
+Copyright(C) 2011-2012 Alibaba Group Holding Limited
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+----------------------------------------------------------------------
+
+关于TDH_Socket
+
+TDH_Socket是一个MySQL daemon plugin 类似于HandlerSocket(https://github.com/DeNADev/HandlerSocket-Plugin-for-MySQL)
+现在TDH_Socket能接受客户端的TCP请求,并且直接通过MySQL的Handler层访问数据,绕开了SQL解析等一系列逻辑
+
+TDH_Socket的Java客户端可以通过在客户端解析SQL的方式提供JDBC接口来提高易用性,并且也不会降低性能
+
+TDH_Socket的一些特性和优点:
+    1.具有HandlerSocket的全部功能
+    2.连接复用,采用动态IO策略,只使用一个port进行通讯
+    3.进行DDL操作时不会hang住(可手动关闭被cache住的表)
+    4.支持流输出,对于大数量的返回,不会占用太多内存
+    5.易用
+      a)不需要在一开始open_table,会在具体执行时open_table,被open的table还是会被当前线程cache住,下次请求不需要再次open
+      b)Java客户端支持JDBC,在客户端进行SQL解析
+    6.支持多线程的并发写操作
+      a)默认情况下,对一个表的写操作都会在一个固定的线程被执行,从而避免可能的死锁
+      b)也可以通过配置使一个表的写操作被多个线程并发执行,但是可能会导致死锁而进行回滚
+      c)客户端可以将写请求发给指定的线程执行,可以在客户端那边在逻辑上保证不会死锁
+    7.读线程的动态调整
+    8.由于采用读写分开以及物理读和逻辑读的线程分开策略使在有大量物理读的时候也能提供比较高的性能
+    9.能对物理读进行流控
+    
+

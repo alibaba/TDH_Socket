@@ -1,0 +1,3515 @@
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/Makefile.in
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/Makefile.in	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/Makefile.in	(revision 724)
+@@ -162,7 +162,12 @@
+ 	libinnobase_a-ut0list.$(OBJEXT) libinnobase_a-ut0mem.$(OBJEXT) \
+ 	libinnobase_a-ut0rbt.$(OBJEXT) libinnobase_a-ut0rnd.$(OBJEXT) \
+ 	libinnobase_a-ut0ut.$(OBJEXT) libinnobase_a-ut0vec.$(OBJEXT) \
+-	libinnobase_a-ut0wqueue.$(OBJEXT)
++	libinnobase_a-ut0wqueue.$(OBJEXT) \
++	libinnobase_a-row0cache.$(OBJEXT) \
++	libinnobase_a-row0cache0hash.$(OBJEXT) \
++	libinnobase_a-row0cache0lru.$(OBJEXT) \
++	libinnobase_a-row0cache0mempool.$(OBJEXT) \
++	libinnobase_a-row0cache0filter.$(OBJEXT)
+ libinnobase_a_OBJECTS = $(am_libinnobase_a_OBJECTS)
+ am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+ am__vpath_adj = case $$p in \
+@@ -237,7 +242,12 @@
+ 	ha_innodb_plugin_la-ut0dbg.lo ha_innodb_plugin_la-ut0list.lo \
+ 	ha_innodb_plugin_la-ut0mem.lo ha_innodb_plugin_la-ut0rbt.lo \
+ 	ha_innodb_plugin_la-ut0rnd.lo ha_innodb_plugin_la-ut0ut.lo \
+-	ha_innodb_plugin_la-ut0vec.lo ha_innodb_plugin_la-ut0wqueue.lo
++	ha_innodb_plugin_la-ut0vec.lo ha_innodb_plugin_la-ut0wqueue.lo \
++	ha_innodb_plugin_la-row0cache.lo \
++	ha_innodb_plugin_la-row0cache0hash.lo \
++	ha_innodb_plugin_la-row0cache0lru.lo \
++	ha_innodb_plugin_la-row0cache0mempool.lo \
++	ha_innodb_plugin_la-row0cache0filter.lo
+ am_ha_innodb_plugin_la_OBJECTS = $(am__objects_1)
+ ha_innodb_plugin_la_OBJECTS = $(am_ha_innodb_plugin_la_OBJECTS)
+ ha_innodb_plugin_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+@@ -516,14 +526,10 @@
+ plugin_blackhole_static_target = @plugin_blackhole_static_target@
+ plugin_csv_shared_target = @plugin_csv_shared_target@
+ plugin_csv_static_target = @plugin_csv_static_target@
+-plugin_daemon_example_shared_target = @plugin_daemon_example_shared_target@
+-plugin_daemon_example_static_target = @plugin_daemon_example_static_target@
+ plugin_example_shared_target = @plugin_example_shared_target@
+ plugin_example_static_target = @plugin_example_static_target@
+ plugin_federated_shared_target = @plugin_federated_shared_target@
+ plugin_federated_static_target = @plugin_federated_static_target@
+-plugin_ftexample_shared_target = @plugin_ftexample_shared_target@
+-plugin_ftexample_static_target = @plugin_ftexample_static_target@
+ plugin_heap_shared_target = @plugin_heap_shared_target@
+ plugin_heap_static_target = @plugin_heap_static_target@
+ plugin_ibmdb2i_shared_target = @plugin_ibmdb2i_shared_target@
+@@ -565,7 +571,6 @@
+ target_os = @target_os@
+ target_vendor = @target_vendor@
+ tools_dirs = @tools_dirs@
+-top_build_prefix = @top_build_prefix@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+ uname_prog = @uname_prog@
+@@ -782,6 +787,11 @@
+ 			include/ut0vec.h	\
+ 			include/ut0vec.ic	\
+ 			include/ut0wqueue.h	\
++			include/row0cache.h     \
++			include/row0cache0hash.h     \
++			include/row0cache0lru.h      \
++			include/row0cache0mempool.h  \
++			include/row0cache0filter.h   \
+ 			mem/mem0dbg.c
+ 
+ EXTRA_LIBRARIES = libinnobase.a
+@@ -879,7 +889,12 @@
+ 			ut/ut0rnd.c			\
+ 			ut/ut0ut.c			\
+ 			ut/ut0vec.c			\
+-			ut/ut0wqueue.c
++			ut/ut0wqueue.c                  \
++			cache/row0cache.c               \
++			cache/row0cache0hash.c          \
++			cache/row0cache0lru.c           \
++			cache/row0cache0mempool.c       \
++		        cache/row0cache0filter.c	
+ 
+ libinnobase_a_CXXFLAGS = $(AM_CFLAGS)
+ libinnobase_a_CFLAGS = $(AM_CFLAGS)
+@@ -1025,6 +1040,11 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-read0read.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-rem0cmp.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-rem0rec.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0cache.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0cache0filter.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0cache0hash.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0cache0lru.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0cache0mempool.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0ext.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0ins.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ha_innodb_plugin_la-row0merge.Plo@am__quote@
+@@ -1118,6 +1138,11 @@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-read0read.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-rem0cmp.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-rem0rec.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0cache.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0cache0filter.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0cache0hash.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0cache0lru.Po@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0cache0mempool.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0ext.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0ins.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libinnobase_a-row0merge.Po@am__quote@
+@@ -2423,6 +2448,76 @@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-ut0wqueue.obj `if test -f 'ut/ut0wqueue.c'; then $(CYGPATH_W) 'ut/ut0wqueue.c'; else $(CYGPATH_W) '$(srcdir)/ut/ut0wqueue.c'; fi`
+ 
++libinnobase_a-row0cache.o: cache/row0cache.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache.o -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache.Tpo -c -o libinnobase_a-row0cache.o `test -f 'cache/row0cache.c' || echo '$(srcdir)/'`cache/row0cache.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache.Tpo $(DEPDIR)/libinnobase_a-row0cache.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache.c' object='libinnobase_a-row0cache.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache.o `test -f 'cache/row0cache.c' || echo '$(srcdir)/'`cache/row0cache.c
++
++libinnobase_a-row0cache.obj: cache/row0cache.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache.obj -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache.Tpo -c -o libinnobase_a-row0cache.obj `if test -f 'cache/row0cache.c'; then $(CYGPATH_W) 'cache/row0cache.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache.c'; fi`
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache.Tpo $(DEPDIR)/libinnobase_a-row0cache.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache.c' object='libinnobase_a-row0cache.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache.obj `if test -f 'cache/row0cache.c'; then $(CYGPATH_W) 'cache/row0cache.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache.c'; fi`
++
++libinnobase_a-row0cache0hash.o: cache/row0cache0hash.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0hash.o -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0hash.Tpo -c -o libinnobase_a-row0cache0hash.o `test -f 'cache/row0cache0hash.c' || echo '$(srcdir)/'`cache/row0cache0hash.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0hash.Tpo $(DEPDIR)/libinnobase_a-row0cache0hash.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0hash.c' object='libinnobase_a-row0cache0hash.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0hash.o `test -f 'cache/row0cache0hash.c' || echo '$(srcdir)/'`cache/row0cache0hash.c
++
++libinnobase_a-row0cache0hash.obj: cache/row0cache0hash.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0hash.obj -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0hash.Tpo -c -o libinnobase_a-row0cache0hash.obj `if test -f 'cache/row0cache0hash.c'; then $(CYGPATH_W) 'cache/row0cache0hash.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0hash.c'; fi`
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0hash.Tpo $(DEPDIR)/libinnobase_a-row0cache0hash.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0hash.c' object='libinnobase_a-row0cache0hash.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0hash.obj `if test -f 'cache/row0cache0hash.c'; then $(CYGPATH_W) 'cache/row0cache0hash.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0hash.c'; fi`
++
++libinnobase_a-row0cache0lru.o: cache/row0cache0lru.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0lru.o -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0lru.Tpo -c -o libinnobase_a-row0cache0lru.o `test -f 'cache/row0cache0lru.c' || echo '$(srcdir)/'`cache/row0cache0lru.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0lru.Tpo $(DEPDIR)/libinnobase_a-row0cache0lru.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0lru.c' object='libinnobase_a-row0cache0lru.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0lru.o `test -f 'cache/row0cache0lru.c' || echo '$(srcdir)/'`cache/row0cache0lru.c
++
++libinnobase_a-row0cache0lru.obj: cache/row0cache0lru.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0lru.obj -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0lru.Tpo -c -o libinnobase_a-row0cache0lru.obj `if test -f 'cache/row0cache0lru.c'; then $(CYGPATH_W) 'cache/row0cache0lru.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0lru.c'; fi`
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0lru.Tpo $(DEPDIR)/libinnobase_a-row0cache0lru.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0lru.c' object='libinnobase_a-row0cache0lru.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0lru.obj `if test -f 'cache/row0cache0lru.c'; then $(CYGPATH_W) 'cache/row0cache0lru.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0lru.c'; fi`
++
++libinnobase_a-row0cache0mempool.o: cache/row0cache0mempool.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0mempool.o -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0mempool.Tpo -c -o libinnobase_a-row0cache0mempool.o `test -f 'cache/row0cache0mempool.c' || echo '$(srcdir)/'`cache/row0cache0mempool.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0mempool.Tpo $(DEPDIR)/libinnobase_a-row0cache0mempool.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0mempool.c' object='libinnobase_a-row0cache0mempool.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0mempool.o `test -f 'cache/row0cache0mempool.c' || echo '$(srcdir)/'`cache/row0cache0mempool.c
++
++libinnobase_a-row0cache0mempool.obj: cache/row0cache0mempool.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0mempool.obj -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0mempool.Tpo -c -o libinnobase_a-row0cache0mempool.obj `if test -f 'cache/row0cache0mempool.c'; then $(CYGPATH_W) 'cache/row0cache0mempool.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0mempool.c'; fi`
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0mempool.Tpo $(DEPDIR)/libinnobase_a-row0cache0mempool.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0mempool.c' object='libinnobase_a-row0cache0mempool.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0mempool.obj `if test -f 'cache/row0cache0mempool.c'; then $(CYGPATH_W) 'cache/row0cache0mempool.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0mempool.c'; fi`
++
++libinnobase_a-row0cache0filter.o: cache/row0cache0filter.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0filter.o -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0filter.Tpo -c -o libinnobase_a-row0cache0filter.o `test -f 'cache/row0cache0filter.c' || echo '$(srcdir)/'`cache/row0cache0filter.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0filter.Tpo $(DEPDIR)/libinnobase_a-row0cache0filter.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0filter.c' object='libinnobase_a-row0cache0filter.o' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0filter.o `test -f 'cache/row0cache0filter.c' || echo '$(srcdir)/'`cache/row0cache0filter.c
++
++libinnobase_a-row0cache0filter.obj: cache/row0cache0filter.c
++@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -MT libinnobase_a-row0cache0filter.obj -MD -MP -MF $(DEPDIR)/libinnobase_a-row0cache0filter.Tpo -c -o libinnobase_a-row0cache0filter.obj `if test -f 'cache/row0cache0filter.c'; then $(CYGPATH_W) 'cache/row0cache0filter.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0filter.c'; fi`
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/libinnobase_a-row0cache0filter.Tpo $(DEPDIR)/libinnobase_a-row0cache0filter.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0filter.c' object='libinnobase_a-row0cache0filter.obj' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libinnobase_a_CFLAGS) $(CFLAGS) -c -o libinnobase_a-row0cache0filter.obj `if test -f 'cache/row0cache0filter.c'; then $(CYGPATH_W) 'cache/row0cache0filter.c'; else $(CYGPATH_W) '$(srcdir)/cache/row0cache0filter.c'; fi`
++
+ ha_innodb_plugin_la-btr0btr.lo: btr/btr0btr.c
+ @am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -MT ha_innodb_plugin_la-btr0btr.lo -MD -MP -MF $(DEPDIR)/ha_innodb_plugin_la-btr0btr.Tpo -c -o ha_innodb_plugin_la-btr0btr.lo `test -f 'btr/btr0btr.c' || echo '$(srcdir)/'`btr/btr0btr.c
+ @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ha_innodb_plugin_la-btr0btr.Tpo $(DEPDIR)/ha_innodb_plugin_la-btr0btr.Plo
+@@ -3046,6 +3141,41 @@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -c -o ha_innodb_plugin_la-ut0wqueue.lo `test -f 'ut/ut0wqueue.c' || echo '$(srcdir)/'`ut/ut0wqueue.c
+ 
++ha_innodb_plugin_la-row0cache.lo: cache/row0cache.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -MT ha_innodb_plugin_la-row0cache.lo -MD -MP -MF $(DEPDIR)/ha_innodb_plugin_la-row0cache.Tpo -c -o ha_innodb_plugin_la-row0cache.lo `test -f 'cache/row0cache.c' || echo '$(srcdir)/'`cache/row0cache.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ha_innodb_plugin_la-row0cache.Tpo $(DEPDIR)/ha_innodb_plugin_la-row0cache.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache.c' object='ha_innodb_plugin_la-row0cache.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -c -o ha_innodb_plugin_la-row0cache.lo `test -f 'cache/row0cache.c' || echo '$(srcdir)/'`cache/row0cache.c
++
++ha_innodb_plugin_la-row0cache0hash.lo: cache/row0cache0hash.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -MT ha_innodb_plugin_la-row0cache0hash.lo -MD -MP -MF $(DEPDIR)/ha_innodb_plugin_la-row0cache0hash.Tpo -c -o ha_innodb_plugin_la-row0cache0hash.lo `test -f 'cache/row0cache0hash.c' || echo '$(srcdir)/'`cache/row0cache0hash.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ha_innodb_plugin_la-row0cache0hash.Tpo $(DEPDIR)/ha_innodb_plugin_la-row0cache0hash.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0hash.c' object='ha_innodb_plugin_la-row0cache0hash.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -c -o ha_innodb_plugin_la-row0cache0hash.lo `test -f 'cache/row0cache0hash.c' || echo '$(srcdir)/'`cache/row0cache0hash.c
++
++ha_innodb_plugin_la-row0cache0lru.lo: cache/row0cache0lru.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -MT ha_innodb_plugin_la-row0cache0lru.lo -MD -MP -MF $(DEPDIR)/ha_innodb_plugin_la-row0cache0lru.Tpo -c -o ha_innodb_plugin_la-row0cache0lru.lo `test -f 'cache/row0cache0lru.c' || echo '$(srcdir)/'`cache/row0cache0lru.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ha_innodb_plugin_la-row0cache0lru.Tpo $(DEPDIR)/ha_innodb_plugin_la-row0cache0lru.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0lru.c' object='ha_innodb_plugin_la-row0cache0lru.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -c -o ha_innodb_plugin_la-row0cache0lru.lo `test -f 'cache/row0cache0lru.c' || echo '$(srcdir)/'`cache/row0cache0lru.c
++
++ha_innodb_plugin_la-row0cache0mempool.lo: cache/row0cache0mempool.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -MT ha_innodb_plugin_la-row0cache0mempool.lo -MD -MP -MF $(DEPDIR)/ha_innodb_plugin_la-row0cache0mempool.Tpo -c -o ha_innodb_plugin_la-row0cache0mempool.lo `test -f 'cache/row0cache0mempool.c' || echo '$(srcdir)/'`cache/row0cache0mempool.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ha_innodb_plugin_la-row0cache0mempool.Tpo $(DEPDIR)/ha_innodb_plugin_la-row0cache0mempool.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0mempool.c' object='ha_innodb_plugin_la-row0cache0mempool.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -c -o ha_innodb_plugin_la-row0cache0mempool.lo `test -f 'cache/row0cache0mempool.c' || echo '$(srcdir)/'`cache/row0cache0mempool.c
++
++ha_innodb_plugin_la-row0cache0filter.lo: cache/row0cache0filter.c
++@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -MT ha_innodb_plugin_la-row0cache0filter.lo -MD -MP -MF $(DEPDIR)/ha_innodb_plugin_la-row0cache0filter.Tpo -c -o ha_innodb_plugin_la-row0cache0filter.lo `test -f 'cache/row0cache0filter.c' || echo '$(srcdir)/'`cache/row0cache0filter.c
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/ha_innodb_plugin_la-row0cache0filter.Tpo $(DEPDIR)/ha_innodb_plugin_la-row0cache0filter.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='cache/row0cache0filter.c' object='ha_innodb_plugin_la-row0cache0filter.lo' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(ha_innodb_plugin_la_CFLAGS) $(CFLAGS) -c -o ha_innodb_plugin_la-row0cache0filter.lo `test -f 'cache/row0cache0filter.c' || echo '$(srcdir)/'`cache/row0cache0filter.c
++
+ .cc.o:
+ @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
+ @am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/mtr/mtr0mtr.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/mtr/mtr0mtr.c	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/mtr/mtr0mtr.c	(revision 724)
+@@ -208,6 +208,12 @@
+ 	ut_d(mtr->state = MTR_COMMITTED);
+ 	dyn_array_free(&(mtr->memo));
+ 	dyn_array_free(&(mtr->log));
++
++
++    if(mtr->row_cache_value_queue_base.count>0){
++        //release row cache value
++        release_row_cache_value_in_mtr(mtr);
++    }
+ }
+ 
+ #ifndef UNIV_HOTBACKUP
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0lru.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0lru.c	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0lru.c	(revision 724)
+@@ -0,0 +1,157 @@
++/********************************************************************
++created:	2011/03/23
++created:	23:3:2011   15:15
++filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin\row0cache0lru.c
++file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin
++file base:	row0cache0lru
++file ext:	c
++author:		wentong@taobao.com
++
++purpose:	
++*********************************************************************/
++#include "row0cache0lru.h"
++#include "row0cache0hash.h"
++#include "row0cache0mempool.h"
++#include "ut0rbt.h"
++#include "ut0lst.h"
++
++#define ROW_CACHE_FREE_DISANCE 100
++
++static ROW_CACHE_VALUE_LIST_BASE *innodb_row_cache_lru;
++
++static row_cache_lru_stat_t  _row_cache_lru_stat;
++
++UNIV_INTERN  row_cache_lru_stat_t* row_cache_lru_stat = &_row_cache_lru_stat; 
++
++UNIV_INTERN my_bool innodb_row_cache_clean_cache = FALSE;
++
++void init_innodb_row_cache_lru(){
++    if (innodb_row_cache_mutex_num > 0){
++        ulint i;
++        innodb_row_cache_lru = (ROW_CACHE_VALUE_LIST_BASE*) ut_malloc(innodb_row_cache_mutex_num * sizeof(ROW_CACHE_VALUE_LIST_BASE));
++        for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++        {
++            UT_LIST_INIT(*(innodb_row_cache_lru+i));
++        }
++    }
++    memset(row_cache_lru_stat , 0 , sizeof(row_cache_lru_stat_t));
++}
++
++void deinit_innodb_row_cache_lru(){
++    if (innodb_row_cache_mutex_num > 0){
++        ulint i;
++        for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++        {
++            row_cache_value_t* value;
++            ROW_CACHE_VALUE_LIST_BASE* free_lru = innodb_row_cache_lru + i;
++            row_cache_enter_mutex_by_no(i);
++            for (value = UT_LIST_GET_LAST(*free_lru);
++                 value!=NULL;){
++                     row_cache_value_t* free_value;
++                     ulint fold;
++                     free_value = value;
++                     fold = free_value->fold;
++                     value=UT_LIST_GET_PREV(list,value);
++                     UT_LIST_REMOVE(list,*free_lru,free_value);
++                     delete_row_cache_value(free_value);
++                     ca_free(free_value->buf ,free_value->buf_size ,fold);
++                     ca_free_for_value(free_value , fold);
++            }
++            row_cache_exit_mutex_by_no(i);
++        }
++        ut_free(innodb_row_cache_lru);
++    }
++}
++
++void clean_row_cache(){
++    if (innodb_row_cache_mutex_num > 0){
++        ulint i;
++        for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++        {
++            row_cache_value_t* value;
++            ROW_CACHE_VALUE_LIST_BASE* free_lru = innodb_row_cache_lru + i;
++            row_cache_enter_mutex_by_no(i);
++            for (value = UT_LIST_GET_LAST(*free_lru);
++                value!=NULL;){
++                    row_cache_value_t* free_value;
++                    ulint fold;
++                    free_value = value;
++                    fold = free_value->fold;
++                    value=UT_LIST_GET_PREV(list,value);
++                    if(free_value->ref_num==0){
++                        UT_LIST_REMOVE(list,*free_lru,free_value);
++                        delete_row_cache_value(free_value);
++                        ca_free(free_value->buf ,free_value->buf_size, fold);
++                        ca_free_for_value(free_value , fold);
++                    }
++            }
++            row_cache_exit_mutex_by_no(i);
++        }
++    }
++}
++
++static ROW_CACHE_VALUE_LIST_BASE* get_current_lru_base(const ulint fold){ 
++    return innodb_row_cache_lru + row_cache_get_mutex_no(fold);
++}
++
++void add_row_cache_value_to_lru( row_cache_value_t* value ) {
++    UT_LIST_ADD_FIRST(list,*get_current_lru_base(value->fold),value);
++    row_cache_lru_stat->n_add++;
++}
++
++void make_row_cache_value_first_from_lru( row_cache_value_t* value )
++{
++    ROW_CACHE_VALUE_LIST_BASE* lru_base = get_current_lru_base(value->fold);
++    UT_LIST_REMOVE(list,*lru_base,value);
++    UT_LIST_ADD_FIRST(list,*lru_base,value);
++    row_cache_lru_stat->n_make_first++;
++}
++
++ulint free_from_lru(const ulint size , const ulint used_fold)
++{
++    ulint iteration_size = 0;
++    int free_distance = 0;
++    ulint free_size = 0;
++    row_cache_value_t* value;
++    ROW_CACHE_VALUE_LIST_BASE* lru_base = get_current_lru_base(used_fold);
++    for (value = UT_LIST_GET_LAST(*lru_base);
++        free_distance < ROW_CACHE_FREE_DISANCE && value!=NULL;)
++    {
++        row_cache_value_t* free_value;
++        free_value = value;
++        value=UT_LIST_GET_PREV(list,value);
++        iteration_size += free_value->buf_size;
++        if(free_value->ref_num==0 && free_value->fold!=used_fold){
++            //the value can't be used or can't be locked by the upper function
++            UT_LIST_REMOVE(list,*lru_base,free_value);
++            row_cache_lru_stat->n_evict++;
++            free_size+=free_value->buf_size;
++            delete_row_cache_value(free_value);
++            ca_free(free_value->buf ,free_value->buf_size , used_fold);
++            ca_free_for_value(free_value , used_fold);
++        }
++        if(iteration_size > size){
++            //when may free enough mem and calc free distance
++            free_distance++;
++        }
++    }
++    return free_size;
++}
++
++void remove_row_cache_value_from_lru( row_cache_value_t* value )
++{
++    UT_LIST_REMOVE(list,*get_current_lru_base(value->fold),value);
++    row_cache_lru_stat->n_evict++;
++}
++
++ulint get_row_cache_lru_count()
++{
++    ulint i;
++    ulint ret = 0;
++    for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++    {
++        ret += UT_LIST_GET_LEN(*(innodb_row_cache_lru+i));
++    }
++    return ret;
++}
++
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0hash.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0hash.c	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0hash.c	(revision 724)
+@@ -0,0 +1,198 @@
++/********************************************************************
++created:	2011/03/24
++created:	24:3:2011   8:49
++filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin\row0cache0hash.c
++file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin
++file base:	row0cache0hash
++file ext:	c
++author:		wentong@taobao.com
++
++purpose:	
++*********************************************************************/
++
++#include "row0cache0hash.h"
++#include "ha0ha.h"
++#include "hash0hash.h"
++#include "rem0rec.h"
++#include "rem0cmp.h"
++#include "ut0byte.h"
++
++
++
++UNIV_INTERN unsigned long innodb_row_cache_cell_num = 10000L;
++
++UNIV_INTERN unsigned int innodb_row_cache_mutex_num_shift = 6;
++
++UNIV_INTERN ulint innodb_row_cache_mutex_num = 0;
++
++static row_cache_t _innodb_row_cache;
++
++UNIV_INTERN row_cache_t* innodb_row_cache = &_innodb_row_cache;
++
++int init_row_cache_hash(my_bool innodb_row_cache_on)
++{
++    memset(innodb_row_cache, 0 , sizeof(row_cache_t));
++    if (innodb_row_cache_on)
++    {
++        innodb_row_cache_mutex_num = (1<<innodb_row_cache_mutex_num_shift);
++        innodb_row_cache->row_cache = ha_create(innodb_row_cache_cell_num,innodb_row_cache_mutex_num,0);
++        
++    }else{
++        innodb_row_cache->row_cache = NULL;
++    }
++    return 0;
++}
++
++static void free_hash_table_mutex(hash_table_t* table){
++    //mutex was freed by sync_close();
++   /* ulint	i;
++    for (i = 0; i < table->n_mutexes; i++) {
++        mutex_free(table->mutexes + i);
++    }*/
++    mem_free(table->mutexes);
++    table->mutexes = NULL;
++    table->n_mutexes = 0;
++    mem_free(table->heaps);
++    table->heaps = NULL;
++}
++
++void  deinit_row_cache_hash(my_bool innodb_row_cache_on){
++    if (innodb_row_cache_on)
++    {
++        ha_clear(innodb_row_cache->row_cache);
++        free_hash_table_mutex(innodb_row_cache->row_cache);
++        hash_table_free(innodb_row_cache->row_cache);
++    }
++}
++
++row_cache_value_t* search_row_cache_value(const dtuple_t* tuple, const dict_index_t* index, const ulint fold)
++{
++    ulint		offsets_[REC_OFFS_NORMAL_SIZE];
++    ulint*		offsets				= offsets_;
++    mem_heap_t*	heap				= NULL;
++    row_cache_chain_t* chain = NULL;
++    rec_offs_init(offsets_);
++
++    HASH_SEARCH(
++        /* hash_chain->"next" */
++        next,
++        /* the hash table */
++        innodb_row_cache->row_cache,
++        /* fold */
++        fold,
++        /* the type of the next variable */
++        row_cache_chain_t*,
++        /* auxiliary variable */
++        chain,
++        /* assertion on every traversed item */
++        ,
++        /* this determines if we have found the lock */
++        (chain->value!=NULL && ut_dulint_cmp(chain->value->tree_id , index->id)==0 && ut_dulint_cmp(chain->value->table_id , index->table->id)==0 &&
++        cmp_dtuple_rec(tuple,chain->value->rec,rec_get_offsets(chain->value->rec, index, offsets, ULINT_UNDEFINED, &heap)) == 0));
++    if (UNIV_LIKELY_NULL(heap)) {
++        mem_heap_free(heap);
++    }
++    if (chain == NULL) {
++        return(NULL);
++    }
++    /* else */
++    return(chain->value);
++}
++
++
++row_cache_value_t* search_row_cache_value_with_rec( const rec_t* rec, const ulint* rec_offsets, dict_index_t* index, const ulint fold )
++{
++    ulint		offsets_[REC_OFFS_NORMAL_SIZE];
++    ulint*		offsets				= offsets_;
++    mem_heap_t*	heap				= NULL;
++    row_cache_chain_t* chain = NULL;
++    rec_offs_init(offsets_);
++
++    HASH_SEARCH(
++        /* hash_chain->"next" */
++        next,
++        /* the hash table */
++        innodb_row_cache->row_cache,
++        /* fold */
++        fold,
++        /* the type of the next variable */
++        row_cache_chain_t*,
++        /* auxiliary variable */
++        chain,
++        /* assertion on every traversed item */
++        ,
++        /* this determines if we have found the lock */
++        (chain->value!=NULL &&  ut_dulint_cmp(chain->value->tree_id , index->id)==0 && ut_dulint_cmp(chain->value->table_id , index->table->id)==0 &&
++        cmp_rec_rec(rec,chain->value->rec,rec_offsets,rec_get_offsets(chain->value->rec, index, offsets, ULINT_UNDEFINED, &heap),index)==0));
++
++    if (UNIV_LIKELY_NULL(heap)) {
++        mem_heap_free(heap);
++    }
++    if (chain == NULL) {
++        return(NULL);
++    }
++    /* else */
++    return(chain->value);
++
++}
++
++
++
++
++row_cache_value_t* insert_row_cache_value(const ulint fold , row_cache_value_t* value){
++    HASH_INSERT(
++        /* the type used in the hash chain */
++        row_cache_chain_t,
++        /* hash_chain->"next" */
++        next,
++        /* the hash table */
++        innodb_row_cache->row_cache,
++        /* fold */
++        fold,
++        /* add this data to the hash */
++        &value->chain);
++    return value;
++}
++
++
++void delete_row_cache_value(row_cache_value_t* value){
++    HASH_DELETE(
++        row_cache_chain_t,
++        next,
++        innodb_row_cache->row_cache,
++        value->fold,
++        (&value->chain));
++}
++
++void row_cache_enter_mutex_by_no(const ulint no){
++    mutex_enter(hash_get_nth_mutex(innodb_row_cache->row_cache, no));
++}
++
++void row_cache_exit_mutex_by_no(const ulint no){
++    mutex_exit(hash_get_nth_mutex(innodb_row_cache->row_cache, no));
++}
++
++void row_cache_enter_mutex( const ulint fold )
++{
++    hash_mutex_enter(innodb_row_cache->row_cache , fold);
++}
++
++ulint row_cache_enter_mutex_nowait( const ulint fold )
++{
++    //hash_mutex_enter(innodb_row_cache->row_cache , fold);
++    return mutex_enter_nowait(hash_get_mutex(innodb_row_cache->row_cache, fold));
++}
++
++void row_cache_exit_mutex( const ulint fold )
++{
++    hash_mutex_exit(innodb_row_cache->row_cache , fold);
++}
++
++int row_cache_own_mutex(const ulint fold1 , const ulint fold2){
++    return hash_get_mutex_no(innodb_row_cache->row_cache , fold1) == hash_get_mutex_no(innodb_row_cache->row_cache , fold2);
++}
++
++ulint row_cache_get_mutex_no( const ulint fold )
++{
++    return hash_get_mutex_no(innodb_row_cache->row_cache , fold);
++}
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0filter.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0filter.c	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0filter.c	(revision 724)
+@@ -0,0 +1,279 @@
++/********************************************************************
++created:	2011/05/31
++created:	31:5:2011   11:40
++filename: 	E:\Work\Project\VS\taobao-mysql\row_cache\storage\innodb_plugin\cache\row0cache0filter.c
++file path:	E:\Work\Project\VS\taobao-mysql\row_cache\storage\innodb_plugin\cache
++file base:	row0cache0filter
++file ext:	c
++author:		wentong@taobao.com
++
++purpose:	
++*********************************************************************/
++
++#include "row0cache0filter.h"
++#include "ut0rbt.h"
++#include "sync0rw.h"
++#include "ut0lst.h"
++#include "hash0hash.h"
++#include "ut0rnd.h"
++#include "dict0mem.h"
++
++#define FILTER_HASH_CELL_NUM 1000
++
++typedef struct row_cache_filter_index_chain row_cache_filter_index_chain_t;
++typedef struct row_cache_filter_index_value row_cache_filter_index_value_t;
++
++struct row_cache_filter_index_chain{
++    row_cache_filter_index_value_t* value;
++    row_cache_filter_index_chain_t* next;
++};
++
++struct row_cache_filter_index_value{
++    dulint tree_id;   
++    row_cache_filter_index_chain_t chain;
++};
++
++UNIV_INTERN char* innodb_row_cache_index = NULL;
++
++static char innodb_row_cache_index_r[INDEX_CONFIG_LEN + 1];
++
++static ibool has_filter = FALSE;
++
++static hash_table_t*  filtered_in_index; 
++
++static hash_table_t*  filtered_out_index; 
++
++static rw_lock_t filter_lock;
++
++void reset_filter();
++static int wild_case_compare_wl(const char *str,const char *wildstr,const size_t length);
++static void free_hash_table_elem(hash_table_t* table);
++
++void init_row_cache_filter(my_bool innodb_row_cache_on){
++    if(innodb_row_cache_on){
++        rw_lock_create(&filter_lock,SYNC_MEM_HASH);
++        filtered_in_index = hash_create(FILTER_HASH_CELL_NUM);
++        filtered_out_index = hash_create(FILTER_HASH_CELL_NUM);
++        reset_filter();
++    }
++}
++
++void deinit_row_cache_filter(my_bool innodb_row_cache_on){
++    if(innodb_row_cache_on){
++        reset_filter();
++        hash_table_free(filtered_in_index);
++        hash_table_free(filtered_out_index);
++        rw_lock_free(&filter_lock);
++    }
++}
++
++void reset_filter(){
++    size_t len = 0;
++    if(innodb_row_cache_index){
++        len = strlen(innodb_row_cache_index);
++    }
++    len = len>INDEX_CONFIG_LEN ? INDEX_CONFIG_LEN : len;
++    rw_lock_x_lock(&filter_lock);      
++    memset(innodb_row_cache_index_r,0,INDEX_CONFIG_LEN+1);
++    if(len){
++        ut_memcpy(innodb_row_cache_index_r,innodb_row_cache_index,len);
++    }
++    innodb_row_cache_index_r[len] = '\0';
++    innodb_row_cache_index = innodb_row_cache_index_r;
++
++    free_hash_table_elem(filtered_in_index);
++    free_hash_table_elem(filtered_out_index);
++    if(!len){
++        has_filter = FALSE;
++    }else{
++        has_filter = TRUE;
++    }
++    rw_lock_x_unlock(&filter_lock);
++}
++
++static void add_result_to_index_hash(ulint fold, dulint tree_id, my_bool is_in_filter){
++    hash_table_t*  table; 
++    row_cache_filter_index_value_t* value;
++    rw_lock_x_lock(&filter_lock);  
++    if(is_in_filter){
++        table = filtered_in_index;
++    }else{
++        table = filtered_out_index;
++    }
++    value = (row_cache_filter_index_value_t*) mem_alloc(sizeof(row_cache_filter_index_value_t));
++    if(value){
++        value->tree_id = tree_id;
++        value->chain.value = value;
++        HASH_INSERT(
++            /* the type used in the hash chain */
++            row_cache_filter_index_chain_t,
++            /* hash_chain->"next" */
++            next,
++            /* the hash table */
++            table,
++            /* fold */
++            fold,
++            /* add this data to the hash */
++            &value->chain);
++    }
++    rw_lock_x_unlock(&filter_lock);
++}
++
++static my_bool is_in_filter_index_hash(ulint fold, dulint tree_id, my_bool is_in_filter){
++    hash_table_t*  table; 
++    row_cache_filter_index_chain_t* chain = NULL;
++    if(is_in_filter){
++        table = filtered_in_index;
++    }else{
++        table = filtered_out_index;
++    }
++    HASH_SEARCH(
++        /* hash_chain->"next" */
++        next,
++        /* the hash table */
++        table,
++        /* fold */
++        fold,
++        /* the type of the next variable */
++        row_cache_filter_index_chain_t*,
++        /* auxiliary variable */
++        chain,
++        /* assertion on every traversed item */
++        ,
++        /* this determines if we have found the lock */
++        (chain->value!=NULL && ut_dulint_cmp(chain->value->tree_id , tree_id)==0));
++    if (chain == NULL) {
++        return(FALSE);
++    }
++    return(TRUE);
++}
++
++static int wild_case_compare_wl(const char *str,const char *wildstr,const size_t length)
++{
++    const char* start = wildstr;
++    char wild_many='*';
++    char wild_one='?';
++    char wild_prefix=0; /* QQ this can potentially cause a SIGSEGV */
++    int flag;
++    while ((size_t)(wildstr-start)<length)
++    {
++        while ((size_t)(wildstr-start)<length && *wildstr != wild_many && *wildstr != wild_one)
++        {
++            if (*wildstr == wild_prefix && (size_t)(wildstr+1-start)<length)
++                wildstr++;
++            if (toupper(*wildstr++) !=
++                toupper(*str++)) return (1);
++        }
++        if ((size_t)(wildstr-start)>=length) 
++            return (*str != 0);
++        if (*wildstr++ == wild_one)
++        {
++            if (! *str++) return (1);	/* One char; skip */
++        }
++        else
++        {						/* Found '*' */
++            if ((size_t)(wildstr-start)>=length) return (0);		/* '*' as last char: OK */
++            flag=(*wildstr != wild_many && *wildstr != wild_one);
++            do
++            {
++                if (flag)
++                {
++                    char cmp;
++                    if ((cmp= *wildstr) == wild_prefix && (size_t)(wildstr+1-start)<length)
++                        cmp=wildstr[1];
++                    cmp=toupper(cmp);
++                    while (*str && toupper(*str) != cmp)
++                        str++;
++                    if (!*str) return (1);
++                }
++                if (wild_case_compare_wl(str,wildstr,length-(wildstr-start)) == 0) return (0);
++            } while (*str++);
++            return(1);
++        }
++    }
++    return (*str != '\0');
++}
++
++
++static my_bool compare_index_config(const char* table_name,const char* index_name,const char* config){
++    char index_sp=';';
++    char table_sp=':';
++    my_bool is_index_now = FALSE;
++    my_bool is_table_matching = FALSE;
++    my_bool is_index_matching = FALSE;
++    while(*config){
++        const char* o_config = config;
++        size_t length = 0;
++        while(*config && *config != index_sp && *config != table_sp){
++            config++;
++            length++;  
++        }
++        if(*config == table_sp){
++            if(!is_index_now){
++                is_table_matching = !wild_case_compare_wl(table_name , o_config , length);
++                is_index_now = TRUE;
++            }else if(is_table_matching){
++                is_index_matching = !wild_case_compare_wl(index_name , o_config , length);
++                if(is_index_matching){
++                    return TRUE;
++                }
++            }
++        }else if(!*config || *config == index_sp){
++            if(is_index_now && is_table_matching){
++                is_index_matching = !wild_case_compare_wl(index_name , o_config , length);
++                if(is_index_matching){
++                    return TRUE;
++                }
++            }
++            is_index_now = FALSE;
++            is_table_matching = FALSE;
++            is_index_matching = FALSE;
++        }
++        if(*config){
++            config++;
++        }
++    }
++    return FALSE;
++}
++
++static void free_hash_table_elem( hash_table_t* table )
++{
++    ulint i;
++    for(i = 0 ; i< table->n_cells ; i++){
++        row_cache_filter_index_chain_t* chain = (row_cache_filter_index_chain_t*) HASH_GET_FIRST(table,i);
++        while(chain!=NULL){
++            row_cache_filter_index_value_t* value = chain->value;
++            chain = chain->next;
++            mem_free(value);
++        }
++    }
++    hash_table_clear(table);
++}
++
++my_bool is_index_need_cache(const dict_index_t* index){
++    const char* table_name = index->table_name;
++    dulint index_id = index->id;
++    const char* index_name = index->name;
++    ulint fold = ut_fold_dulint(index_id);
++    my_bool is_in_hash = FALSE;
++    my_bool ret;
++    rw_lock_s_lock(&filter_lock);  
++    if(!has_filter){
++        is_in_hash = TRUE;  //didn't need to be cache the result
++        ret = TRUE;
++    }else if(is_in_filter_index_hash(fold,index_id,TRUE)){
++        is_in_hash = TRUE;
++        ret = TRUE;
++    }else if(is_in_filter_index_hash(fold,index_id,FALSE)){
++        is_in_hash = TRUE;
++        ret = FALSE;
++    }else{
++        ret = compare_index_config(table_name, index_name, innodb_row_cache_index_r);
++    }
++    rw_lock_s_unlock(&filter_lock);  
++    if(!is_in_hash){
++        add_result_to_index_hash(fold,index_id,ret);
++    }
++    return ret;
++}
++
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0mempool.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0mempool.c	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache0mempool.c	(revision 724)
+@@ -0,0 +1,806 @@
++/********************************************************************
++	created:	2011/03/23
++	created:	23:3:2011   15:15
++	filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin\row0cache0mempool.c
++	file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin
++	file base:	row0cache0mempool
++	file ext:	c
++	author:		wentong@taobao.com
++	
++	purpose:	
++*********************************************************************/
++#include "row0cache0mempool.h"
++#include "mem0mem.h"
++#include "sync0sync.h"
++#include "row0cache0lru.h"
++#include "mem0pool.h"
++#include "row0cache.h"
++#include "ut0lst.h"
++#include "os0proc.h"
++#include "srv0srv.h"
++
++//copy from mem0pool.c
++ 
++/** A dummy pointer for generating a null pointer exception in
++ut_malloc_low() */
++static ulint*	ut_mem_null_ptr	= NULL;
++ 
++/** The smallest memory area total size */
++#define MEM_AREA_MIN_SIZE	(2 * MEM_AREA_EXTRA_SIZE)
++
++/** Mask used to extract the free bit from area->size */
++#define MEM_AREA_FREE	1
++
++/** Data structure for a memory pool. The space is allocated using the buddy
++algorithm, where free list i contains areas of size 2 to power i. */
++struct mem_pool_struct{
++	byte*		buf;		/*!< memory pool */
++	ulint		size;		/*!< memory common pool size */
++	ulint		reserved;	/*!< amount of currently allocated
++					memory */
++	mutex_t		mutex;		/*!< mutex protecting this struct */
++	UT_LIST_BASE_NODE_T(mem_area_t)
++			free_list[64];	/*!< lists of free memory areas: an
++					area is put to the list whose number
++					is the 2-logarithm of the area size */
++};
++
++/********************************************************************//**
++Sets memory area size. */
++static
++void
++mem_area_set_size_out(
++/*==============*/
++ mem_area_t*	area,	/*!< in: area */
++ ulint		size)	/*!< in: size */
++{
++    area->size_and_free = (area->size_and_free & MEM_AREA_FREE)
++        | size;
++}
++
++/********************************************************************//**
++Sets memory area free bit. */
++static
++void
++mem_area_set_free_out(
++/*==============*/
++mem_area_t*	area,	/*!< in: area */
++ibool		free)	/*!< in: free bit value */
++{
++#if TRUE != MEM_AREA_FREE
++# error "TRUE != MEM_AREA_FREE"
++#endif
++    area->size_and_free = (area->size_and_free & ~MEM_AREA_FREE)
++        | free;
++}
++
++/********************************************************************//**
++Returns memory area free bit.
++ @return	TRUE if free */
++static
++ibool
++mem_area_get_free_out(
++/*==============*/
++mem_area_t*	area)	/*!< in: area */
++{
++#if TRUE != MEM_AREA_FREE
++# error "TRUE != MEM_AREA_FREE"
++#endif
++    return(area->size_and_free & MEM_AREA_FREE);
++}
++
++/********************************************************************//**
++Returns memory area size.
++@return	size */
++static
++ulint
++mem_area_get_size_out(
++/*==============*/
++mem_area_t*	area)	/*!< in: area */
++{
++    return(area->size_and_free & ~MEM_AREA_FREE);
++}
++
++
++/********************************************************************//**
++Gets the buddy of an area, if it exists in pool.
++@return	the buddy, NULL if no buddy in pool */
++static
++mem_area_t*
++mem_area_get_buddy_out(
++/*===============*/
++	mem_area_t*	area,	/*!< in: memory area */
++	ulint		size,	/*!< in: memory area size */
++	mem_pool_t*	pool)	/*!< in: memory pool */
++{
++	mem_area_t*	buddy;
++
++	ut_ad(size != 0);
++
++	if (((((byte*)area) - pool->buf) % (2 * size)) == 0) {
++
++		/* The buddy is in a higher address */
++
++		buddy = (mem_area_t*)(((byte*)area) + size);
++
++		if ((((byte*)buddy) - pool->buf) + size > pool->size) {
++
++			/* The buddy is not wholly contained in the pool:
++			there is no buddy */
++
++			buddy = NULL;
++		}
++	} else {
++		/* The buddy is in a lower address; NOTE that area cannot
++		be at the pool lower end, because then we would end up to
++		the upper branch in this if-clause: the remainder would be
++		0 */
++
++		buddy = (mem_area_t*)(((byte*)area) - size);
++	}
++
++	return(buddy);
++}
++/********************************************************************//**
++Fills the specified free list.
++@return	TRUE if we were able to insert a block to the free list */
++static
++ibool
++mem_pool_fill_free_list(
++/*====================*/
++	ulint		i,	/*!< in: free list index */
++	mem_pool_t*	pool)	/*!< in: memory pool */
++{
++	mem_area_t*	area;
++	mem_area_t*	area2;
++	ibool		ret;
++
++	ut_ad(mutex_own(&(pool->mutex)));
++
++	if (UNIV_UNLIKELY(i >= 63)) {
++		/* We come here when we have run out of space in the
++		memory pool: */
++
++		return(FALSE);
++	}
++
++	area = UT_LIST_GET_FIRST(pool->free_list[i + 1]);
++
++	if (area == NULL) {
++		if (UT_LIST_GET_LEN(pool->free_list[i + 1]) > 0) {
++			ut_print_timestamp(stderr);
++
++			fprintf(stderr,
++				"  InnoDB: Error: mem pool free list %lu"
++				" length is %lu\n"
++				"InnoDB: though the list is empty!\n",
++				(ulong) i + 1,
++				(ulong)
++				UT_LIST_GET_LEN(pool->free_list[i + 1]));
++		}
++
++		ret = mem_pool_fill_free_list(i + 1, pool);
++
++		if (ret == FALSE) {
++
++			return(FALSE);
++		}
++
++		area = UT_LIST_GET_FIRST(pool->free_list[i + 1]);
++	}
++
++	if (UNIV_UNLIKELY(UT_LIST_GET_LEN(pool->free_list[i + 1]) == 0)) {
++		mem_analyze_corruption(area);
++
++		ut_error;
++	}
++
++	UT_LIST_REMOVE(free_list, pool->free_list[i + 1], area);
++
++	area2 = (mem_area_t*)(((byte*)area) + ut_2_exp(i));
++	UNIV_MEM_ALLOC(area2, MEM_AREA_EXTRA_SIZE);
++
++	mem_area_set_size_out(area2, ut_2_exp(i));
++	mem_area_set_free_out(area2, TRUE);
++
++	UT_LIST_ADD_FIRST(free_list, pool->free_list[i], area2);
++
++	mem_area_set_size_out(area, ut_2_exp(i));
++
++	UT_LIST_ADD_FIRST(free_list, pool->free_list[i], area);
++
++	return(TRUE);
++}
++
++/********************************************************************//**
++Creates a memory pool.
++@return	memory pool */
++static
++mem_pool_t*
++mem_pool_create_out(
++/*============*/
++	ulint	size)	/*!< in: pool size in bytes */
++{
++	mem_pool_t*	pool;
++	mem_area_t*	area;
++	ulint		i;
++	ulint		used;
++
++	pool = ut_malloc(sizeof(mem_pool_t));
++
++	/* We do not set the memory to zero (FALSE) in the pool,
++	but only when allocated at a higher level in mem0mem.c.
++	This is to avoid masking useful Purify warnings. */
++
++	pool->buf = ut_malloc_low(size, FALSE, TRUE);
++   /* pool->buf = os_mem_alloc_large(&size);
++    if (pool->buf == NULL) {
++        ut_print_timestamp(stderr);
++
++        fprintf(stderr,
++            "  InnoDB: We now intentionally"
++            " generate a seg fault so that\n"
++            "InnoDB: on Linux we get a stack trace.\n");
++
++        if (*ut_mem_null_ptr) ut_mem_null_ptr = 0;
++    } */
++	pool->size = size;
++
++	mutex_create(&pool->mutex, SYNC_MEM_POOL);
++
++	/* Initialize the free lists */
++
++	for (i = 0; i < 64; i++) {
++
++		UT_LIST_INIT(pool->free_list[i]);
++	}
++
++	used = 0;
++
++	while (size - used >= MEM_AREA_MIN_SIZE) {
++
++		i = ut_2_log(size - used);
++
++		if (ut_2_exp(i) > size - used) {
++
++			/* ut_2_log rounds upward */
++
++			i--;
++		}
++
++		area = (mem_area_t*)(pool->buf + used);
++
++		mem_area_set_size_out(area, ut_2_exp(i));
++		mem_area_set_free_out(area, TRUE);
++		UNIV_MEM_FREE(MEM_AREA_EXTRA_SIZE + (byte*) area,
++			      ut_2_exp(i) - MEM_AREA_EXTRA_SIZE);
++
++		UT_LIST_ADD_FIRST(free_list, pool->free_list[i], area);
++
++		used = used + ut_2_exp(i);
++	}
++
++	ut_ad(size >= used);
++
++	pool->reserved = 0;
++
++	return(pool);
++}
++
++/********************************************************************//**
++Frees a memory pool. */
++static
++void
++mem_pool_free_out(
++/*==========*/
++	mem_pool_t*	pool)	/*!< in, own: memory pool */
++{
++	//os_mem_free_large(pool->buf , pool->size);
++    ut_free(pool->buf);
++	ut_free(pool);
++}
++
++/********************************************************************//**
++Allocates memory from a pool. NOTE: This low-level function should only be
++used in mem0mem.*!
++@return	own: allocated memory buffer */
++static
++void*
++mem_area_alloc_out(
++/*===========*/
++	ulint*		psize,	/*!< in: requested size in bytes; for optimum
++				space usage, the size should be a power of 2
++				minus MEM_AREA_EXTRA_SIZE;
++				out: allocated size in bytes (greater than
++				or equal to the requested size) */
++	mem_pool_t*	pool)	/*!< in: memory pool */
++{
++	mem_area_t*	area;
++	ulint		size;
++	ulint		n;
++	ibool		ret;
++
++	
++	size = *psize;
++	n = ut_2_log(ut_max(size + MEM_AREA_EXTRA_SIZE, MEM_AREA_MIN_SIZE));
++
++	mutex_enter(&(pool->mutex));
++
++
++	area = UT_LIST_GET_FIRST(pool->free_list[n]);
++
++	if (area == NULL) {
++		ret = mem_pool_fill_free_list(n, pool);
++
++		if (ret == FALSE) {
++			/* Out of memory in memory pool: we try to allocate
++			from the operating system with the regular malloc: */
++
++			mutex_exit(&(pool->mutex));
++
++			return(NULL);
++		}
++
++		area = UT_LIST_GET_FIRST(pool->free_list[n]);
++	}
++
++	if (!mem_area_get_free_out(area)) {
++		fprintf(stderr,
++			"InnoDB: Error: Removing element from mem pool"
++			" free list %lu though the\n"
++			"InnoDB: element is not marked free!\n",
++			(ulong) n);
++
++		mem_analyze_corruption(area);
++
++		/* Try to analyze a strange assertion failure reported at
++		mysql@lists.mysql.com where the free bit IS 1 in the
++		hex dump above */
++
++		if (mem_area_get_free_out(area)) {
++			fprintf(stderr,
++				"InnoDB: Probably a race condition"
++				" because now the area is marked free!\n");
++		}
++
++		ut_error;
++	}
++
++	if (UT_LIST_GET_LEN(pool->free_list[n]) == 0) {
++		fprintf(stderr,
++			"InnoDB: Error: Removing element from mem pool"
++			" free list %lu\n"
++			"InnoDB: though the list length is 0!\n",
++			(ulong) n);
++		mem_analyze_corruption(area);
++
++		ut_error;
++	}
++
++	ut_ad(mem_area_get_size_out(area) == ut_2_exp(n));
++
++	mem_area_set_free_out(area, FALSE);
++
++	UT_LIST_REMOVE(free_list, pool->free_list[n], area);
++
++	pool->reserved += mem_area_get_size_out(area);
++
++	mutex_exit(&(pool->mutex));
++
++	ut_ad(mem_pool_validate(pool));
++
++	*psize = ut_2_exp(n) - MEM_AREA_EXTRA_SIZE;
++	UNIV_MEM_ALLOC(MEM_AREA_EXTRA_SIZE + (byte*)area, *psize);
++
++	return((void*)(MEM_AREA_EXTRA_SIZE + ((byte*)area)));
++}
++
++/********************************************************************//**
++Frees memory to a pool. */
++static
++void
++mem_area_free_out(
++/*==========*/
++	void*		ptr,	/*!< in, own: pointer to allocated memory
++				buffer */
++	mem_pool_t*	pool)	/*!< in: memory pool */
++{
++	mem_area_t*	area;
++	mem_area_t*	buddy;
++	void*		new_ptr;
++	ulint		size;
++	ulint		n;
++
++	
++
++	/* It may be that the area was really allocated from the OS with
++	regular malloc: check if ptr points within our memory pool */
++
++	if ((byte*)ptr < pool->buf || (byte*)ptr >= pool->buf + pool->size) {
++		ut_free(ptr);
++
++		return;
++	}
++
++	area = (mem_area_t*) (((byte*)ptr) - MEM_AREA_EXTRA_SIZE);
++
++	if (mem_area_get_free_out(area)) {
++		fprintf(stderr,
++			"InnoDB: Error: Freeing element to mem pool"
++			" free list though the\n"
++			"InnoDB: element is marked free!\n");
++
++		mem_analyze_corruption(area);
++		ut_error;
++	}
++
++	size = mem_area_get_size_out(area);
++	UNIV_MEM_FREE(ptr, size - MEM_AREA_EXTRA_SIZE);
++
++	if (size == 0) {
++		fprintf(stderr,
++			"InnoDB: Error: Mem area size is 0. Possibly a"
++			" memory overrun of the\n"
++			"InnoDB: previous allocated area!\n");
++
++		mem_analyze_corruption(area);
++		ut_error;
++	}
++
++#ifdef UNIV_LIGHT_MEM_DEBUG
++	if (((byte*)area) + size < pool->buf + pool->size) {
++
++		ulint	next_size;
++
++		next_size = mem_area_get_size_out(
++			(mem_area_t*)(((byte*)area) + size));
++		if (UNIV_UNLIKELY(!next_size || !ut_is_2pow(next_size))) {
++			fprintf(stderr,
++				"InnoDB: Error: Memory area size %lu,"
++				" next area size %lu not a power of 2!\n"
++				"InnoDB: Possibly a memory overrun of"
++				" the buffer being freed here.\n",
++				(ulong) size, (ulong) next_size);
++			mem_analyze_corruption(area);
++
++			ut_error;
++		}
++	}
++#endif
++	buddy = mem_area_get_buddy_out(area, size, pool);
++
++	n = ut_2_log(size);
++
++	mutex_enter(&(pool->mutex));
++
++
++	if (buddy && mem_area_get_free_out(buddy)
++	    && (size == mem_area_get_size_out(buddy))) {
++
++		/* The buddy is in a free list */
++
++		if ((byte*)buddy < (byte*)area) {
++			new_ptr = ((byte*)buddy) + MEM_AREA_EXTRA_SIZE;
++
++			mem_area_set_size_out(buddy, 2 * size);
++			mem_area_set_free_out(buddy, FALSE);
++		} else {
++			new_ptr = ptr;
++
++			mem_area_set_size_out(area, 2 * size);
++		}
++
++		/* Remove the buddy from its free list and merge it to area */
++
++		UT_LIST_REMOVE(free_list, pool->free_list[n], buddy);
++
++		pool->reserved += ut_2_exp(n);
++
++		mutex_exit(&(pool->mutex));
++
++		mem_area_free_out(new_ptr, pool);
++
++		return;
++	} else {
++		UT_LIST_ADD_FIRST(free_list, pool->free_list[n], area);
++
++		mem_area_set_free_out(area, TRUE);
++
++		ut_ad(pool->reserved >= size);
++
++		pool->reserved -= size;
++	}
++
++	mutex_exit(&(pool->mutex));
++
++	ut_ad(mem_pool_validate(pool));
++}
++
++//end copy
++
++UNIV_INTERN my_bool innodb_row_cache_use_sys_malloc = FALSE;
++
++UNIV_INTERN llong innodb_row_cache_mem_pool_size = 1024 * 1024L; //default is 1M
++
++UNIV_INTERN llong innodb_row_cache_additional_mem_pool_size = 1024 * 1024L;//default is 1M
++
++//mem pool
++static mem_pool_t** row_cache_mem_pool = NULL;
++
++//system malloc stat
++static llong* sys_malloc_mem_size = NULL;
++
++static llong* sys_malloc_mem_used = NULL;
++
++static ROW_CACHE_VALUE_LIST_BASE *innodb_row_cache_value_mem_list = NULL;
++
++static row_cache_value_t *innodb_row_cache_value_mem_pool = NULL;
++
++static ROW_CACHE_VALUE_QUEUE_LIST_BASE *innodb_row_cache_queue_mem_list = NULL;
++
++static row_cache_value_queue_t *innodb_row_cache_queue_mem_pool = NULL;
++
++void init_row_cache_mem_pool(my_bool innodb_row_cache_on)
++{
++    if(!innodb_row_cache_on){
++        innodb_row_cache_mem_pool_size = 1;
++    }
++    if (sizeof(ulint) == 4) {
++        if (innodb_row_cache_mem_pool_size > UINT_MAX32) {
++             ut_print_timestamp(stderr);
++             fprintf(stderr,
++                 "[Error]innodb_row_cache_mem_pool_size can't be over 4GB"
++                " on 32-bit systems\n");
++        }
++    }
++    if (innodb_row_cache_mutex_num > 0){
++        long long mem_pool_size = 0;
++        ulint i;
++        //init row cache value mem pool
++        ulint row_cache_value_mem_list_size = 0;
++        ulint row_cache_mem_pool_value_num = innodb_row_cache_additional_mem_pool_size / sizeof(row_cache_value_t);
++        ulint row_cache_max_queue_num;
++        if (row_cache_mem_pool_value_num>0){
++            row_cache_value_mem_list_size =  innodb_row_cache_mutex_num * sizeof(ROW_CACHE_VALUE_LIST_BASE);
++            //create row cache mem list
++            innodb_row_cache_value_mem_list = (ROW_CACHE_VALUE_LIST_BASE*) ut_malloc(row_cache_value_mem_list_size);
++            innodb_row_cache_value_mem_pool = (row_cache_value_t*) ut_malloc(row_cache_mem_pool_value_num * sizeof(row_cache_value_t));
++            for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++            {
++                UT_LIST_INIT(*(innodb_row_cache_value_mem_list+i));
++            }
++            for (i = 0 ; i < row_cache_mem_pool_value_num ; i++)
++            {
++                ROW_CACHE_VALUE_LIST_BASE* value_list = innodb_row_cache_value_mem_list + (i % innodb_row_cache_mutex_num);
++                row_cache_value_t* value =  innodb_row_cache_value_mem_pool + i;
++                memset(value , 0 , sizeof(row_cache_value_t));
++                UT_LIST_ADD_FIRST(list,*value_list,value);
++            }
++        }
++        //create row cache queue mem list 
++        innodb_row_cache_queue_mem_list = (ROW_CACHE_VALUE_QUEUE_LIST_BASE*) ut_malloc(innodb_row_cache_mutex_num * sizeof(ROW_CACHE_VALUE_QUEUE_LIST_BASE));
++        row_cache_max_queue_num = srv_thread_concurrency * 2 * innodb_row_cache_mutex_num;
++        innodb_row_cache_queue_mem_pool = (row_cache_value_queue_t*) ut_malloc(row_cache_max_queue_num * sizeof(row_cache_value_queue_t));
++        for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++        {
++            UT_LIST_INIT(*(innodb_row_cache_queue_mem_list+i));
++        }
++        for (i = 0 ; i < row_cache_max_queue_num ; i++)
++        {
++            ROW_CACHE_VALUE_QUEUE_LIST_BASE* list_base = innodb_row_cache_queue_mem_list + (i % innodb_row_cache_mutex_num);
++            row_cache_value_queue_t* value =  innodb_row_cache_queue_mem_pool + i;
++            memset(value , 0 , sizeof(row_cache_value_queue_t));
++            UT_LIST_ADD_FIRST(list,*list_base,value);
++        }
++
++        if(!innodb_row_cache_use_sys_malloc){
++            //init general mem pool
++            row_cache_mem_pool = (mem_pool_t**) ut_malloc(innodb_row_cache_mutex_num * sizeof(mem_pool_t*));
++            for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++            {   
++                row_cache_mem_pool[i] =  mem_pool_create_out(innodb_row_cache_mem_pool_size / innodb_row_cache_mutex_num);
++                mem_pool_size += row_cache_mem_pool[i]->size;
++            }
++            //set to real alloc size!
++            innodb_row_cache_mem_pool_size = mem_pool_size; 
++        }else{
++            //init system malloc mem stat
++            sys_malloc_mem_size = (llong*) ut_malloc(innodb_row_cache_mutex_num * sizeof(llong));
++            for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++            {  
++                sys_malloc_mem_size[i] = innodb_row_cache_mem_pool_size / innodb_row_cache_mutex_num;
++            }
++            sys_malloc_mem_used = (llong*) ut_malloc(innodb_row_cache_mutex_num * sizeof(llong));
++            memset(sys_malloc_mem_used , 0 , innodb_row_cache_mutex_num * sizeof(llong));
++        }
++    }
++}
++
++void deinit_row_cache_mem_pool(){
++    if (innodb_row_cache_mutex_num > 0){
++        if(!innodb_row_cache_use_sys_malloc){
++            ulint i;
++            for (i = 0 ; i < innodb_row_cache_mutex_num ; i++){
++                //mutex_free(&row_cache_mem_pool[i]->mutex); //free in sync_close()
++                mem_pool_free_out(row_cache_mem_pool[i]);
++            }
++            ut_free(row_cache_mem_pool);
++            row_cache_mem_pool=NULL;
++        }else{
++            ut_free(sys_malloc_mem_size);
++            ut_free(sys_malloc_mem_used);
++        }
++    }
++    if(innodb_row_cache_value_mem_pool){
++        ut_free(innodb_row_cache_value_mem_pool);
++        innodb_row_cache_value_mem_pool=NULL;
++    }
++    if(innodb_row_cache_value_mem_list){
++        ut_free(innodb_row_cache_value_mem_list);
++        innodb_row_cache_value_mem_list=NULL;
++    }
++    if(innodb_row_cache_queue_mem_pool){
++        ut_free(innodb_row_cache_queue_mem_pool);
++        innodb_row_cache_queue_mem_pool=NULL;
++    }
++    if(innodb_row_cache_queue_mem_list){
++        ut_free(innodb_row_cache_queue_mem_list);
++        innodb_row_cache_queue_mem_list=NULL;
++    }
++}
++
++static mem_pool_t* get_current_mem_pool(const ulint fold){ 
++    return row_cache_mem_pool[row_cache_get_mutex_no(fold)];
++}
++
++void* ca_malloc_low(ulint n , const ulint used_fold)
++{
++    void* ret = NULL;
++    if(!innodb_row_cache_use_sys_malloc){
++        mem_pool_t* mem_pool = get_current_mem_pool(used_fold);
++        ret=mem_area_alloc_out(&n,mem_pool);
++        if(ret==NULL){
++            free_from_lru(n,used_fold);
++            ret=mem_area_alloc_out(&n,mem_pool);
++        }
++    }else{
++        ulint no = row_cache_get_mutex_no(used_fold);
++        if(sys_malloc_mem_size[no] - sys_malloc_mem_used[no] > n){
++            ret = malloc(n);
++        }
++        if(ret==NULL){
++            free_from_lru(n,used_fold);
++            ret=malloc(n);
++        }
++        if(ret){
++            sys_malloc_mem_used[no] += n;
++        }
++    }
++    return ret;     
++}
++
++void ca_free_low( void* ptr , const ulint size ,const ulint used_fold)
++{
++    if(!innodb_row_cache_use_sys_malloc){
++        mem_area_free_out(ptr,get_current_mem_pool(used_fold));
++    }else{
++        ulint no = row_cache_get_mutex_no(used_fold);
++        free(ptr);
++        sys_malloc_mem_used[no] -= size;
++    }
++}
++
++static ROW_CACHE_VALUE_LIST_BASE* get_current_value_list(const ulint fold){
++    if(innodb_row_cache_value_mem_list){
++        return innodb_row_cache_value_mem_list + row_cache_get_mutex_no(fold);
++    }
++    return NULL;
++}
++
++row_cache_value_t* ca_malloc_for_value( const ulint used_fold )
++{
++    row_cache_value_t*  value = NULL;
++    ROW_CACHE_VALUE_LIST_BASE* value_list = get_current_value_list(used_fold);
++    if(value_list && UT_LIST_GET_LEN(*value_list) > 0){
++        value = UT_LIST_GET_FIRST(*value_list);
++        UT_LIST_REMOVE(list,*value_list,value);
++        memset(value , 0 , sizeof(row_cache_value_t));
++        //set value mean it come from value's mem pool
++        onBit(value->flag,FLAG_VALUE_IS_FROM_VALUE_POOL);
++    }else{
++        value = (row_cache_value_t*) ca_malloc(sizeof(row_cache_value_t) , used_fold);
++        if(value){
++            memset(value , 0 , sizeof(row_cache_value_t));
++        }
++    }
++    return value;
++}
++
++void ca_free_for_value( row_cache_value_t* value, const ulint used_fold )
++{
++    if(isValueFromValuePool(value->flag)){
++        ROW_CACHE_VALUE_LIST_BASE* value_list = get_current_value_list(used_fold);
++        UT_LIST_ADD_FIRST(list,*value_list,value);
++    }else{
++        ca_free(value,sizeof(row_cache_value_t),used_fold);
++    }
++}
++
++static ROW_CACHE_VALUE_QUEUE_LIST_BASE* get_current_value_queue_list(const ulint fold){ 
++    if(innodb_row_cache_queue_mem_list){
++        return innodb_row_cache_queue_mem_list + row_cache_get_mutex_no(fold);
++    }
++    return NULL;
++}
++
++
++row_cache_value_queue_t* ca_malloc_for_queue( const ulint used_fold )
++{
++    row_cache_value_queue_t* value = NULL;
++    ROW_CACHE_VALUE_QUEUE_LIST_BASE* list_base = get_current_value_queue_list(used_fold);
++    if(list_base && UT_LIST_GET_LEN(*list_base) > 0){
++        value = UT_LIST_GET_FIRST(*list_base);
++        UT_LIST_REMOVE(list,*list_base,value);
++        memset(value , 0 , sizeof(row_cache_value_queue_t));
++    }else{
++        value = (row_cache_value_queue_t*) ca_malloc(sizeof(row_cache_value_queue_t) , used_fold);
++        if(value){
++            memset(value , 0 , sizeof(row_cache_value_queue_t));
++        }
++    }
++    return value;
++
++}
++
++void ca_free_for_queue( row_cache_value_queue_t* value, const ulint used_fold )
++{
++    ROW_CACHE_VALUE_QUEUE_LIST_BASE* list_base = get_current_value_queue_list(used_fold);
++    UT_LIST_ADD_FIRST(list,*list_base,value);
++}
++
++
++ulint row_cache_mem_pool_used()
++{
++    ulint ret = 0;
++    ulint i;
++    if(!innodb_row_cache_use_sys_malloc){
++        if(row_cache_mem_pool){
++            for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++            {
++                ret += mem_pool_get_reserved(row_cache_mem_pool[i]);
++            }
++        }
++    }else{
++        if(sys_malloc_mem_used){
++            for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++            {
++                ret += sys_malloc_mem_used[i];
++            }
++        }
++    }
++    return ret;    
++}
++
++ulint row_cache_get_value_free_count(){
++    ulint ret = 0;
++    ulint i;
++    if(innodb_row_cache_value_mem_list){
++        for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++        {
++            ret += UT_LIST_GET_LEN(innodb_row_cache_value_mem_list[i]);
++        }
++    }
++    return ret;
++}
++
++ulint row_cache_get_queue_free_count(){
++    ulint ret = 0;
++    ulint i;
++    if(innodb_row_cache_queue_mem_list){
++        for (i = 0 ; i < innodb_row_cache_mutex_num ; i++)
++        {
++            ret += UT_LIST_GET_LEN(innodb_row_cache_queue_mem_list[i]);
++        }
++    }
++    return ret;
++}
+\ No newline at end of file
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache.c	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/cache/row0cache.c	(revision 724)
+@@ -0,0 +1,374 @@
++/********************************************************************
++created:	2011/03/17
++created:	17:3:2011   16:51
++filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin\row0cache.c
++file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\plugin
++file base:	row0cache
++file ext:	c
++author:		wentong@taobao.com
++
++purpose:	for row cache
++*********************************************************************/
++
++#include "row0cache.h"
++#include "row0cache0mempool.h"
++#include "row0cache0hash.h"
++#include "mtr0mtr.h"
++#include "rem0rec.h"
++#include "row0cache0lru.h"
++#include "trx0types.h"
++#include "page0page.h"
++#include "log0recv.h"
++#include "read0read.h"
++#include "rem0cmp.h"
++#include "row0cache0filter.h"
++
++UNIV_INTERN my_bool innodb_row_cache_on = FALSE;
++
++static row_cache_stat_t _row_cache_stat;
++
++UNIV_INTERN  row_cache_stat_t* row_cache_stat = &_row_cache_stat; 
++
++
++void init_row_cache()
++{
++    DBUG_ENTER("init_row_cache");
++    memset(row_cache_stat , 0 , sizeof(row_cache_stat_t));
++    init_row_cache_hash(innodb_row_cache_on);
++    init_innodb_row_cache_lru();
++    init_row_cache_mem_pool(innodb_row_cache_on);
++    init_row_cache_filter(innodb_row_cache_on);
++    //init_row_cache_lock_pool(1000);//TODO 
++    DBUG_VOID_RETURN;
++}
++
++void deinit_row_cache()
++{   
++    DBUG_ENTER("deinit_row_cache");
++    deinit_innodb_row_cache_lru();
++    deinit_row_cache_hash(innodb_row_cache_on);
++    deinit_row_cache_mem_pool();
++    /*deinit_row_cache_filter(innodb_row_cache_on);*/ // deinitde in innobase_shutdown_for_mysql*/
++    DBUG_VOID_RETURN;
++}
++
++static row_cache_value_t* create_row_cache_value(const rec_t* rec ,const ulint* offsets, ulint fold,const dict_index_t* index, ibool is_sec_index) 
++{
++    ulint buf_size;
++    row_cache_value_t*  value = ca_malloc_for_value(fold);
++    if(value == NULL){
++        //not enough mem
++        ut_print_timestamp(stderr);
++        fprintf(stderr,"[Warnning] malloc row_cache_value_t failded in create_row_cache_value !\n");
++        return NULL;
++    }
++    buf_size=rec_offs_extra_size(offsets)+rec_offs_data_size(offsets);
++    if(is_sec_index){
++        buf_size+=sizeof(trx_id_t);
++    }
++    value->buf = (rec_t*) ca_malloc(buf_size , fold);
++    if(value->buf==NULL){
++        //not enough mem
++        ut_print_timestamp(stderr);
++        fprintf(stderr,"[Warnning] malloc rec copy buf failded in create_row_cache_value !\n");
++        ca_free_for_value(value , fold);
++        return NULL;
++    }
++    memset(value->buf,0,buf_size);
++    value->fold = fold;
++    value->tree_id=index->id;
++	value->table_id=index->table->id;
++    value->rec = rec_copy(value->buf , rec , offsets);
++    if(is_sec_index){
++        trx_id_t* trx_id_in_rec=(trx_id_t*) (value->buf + buf_size - sizeof(trx_id_t));
++        *trx_id_in_rec = page_get_max_trx_id(page_align(rec)); 
++    }
++    value->buf_size=buf_size;
++    value->ref_num=0;
++    value->chain.value = value; 
++    return value;
++}
++
++static int update_row_cache_value(row_cache_value_t* value, const rec_t* rec ,const ulint* offsets, ulint fold,const dict_index_t* index,ibool is_sec_index){
++    ulint buf_size;
++    ca_free(value->buf ,value->buf_size, fold);
++    buf_size=rec_offs_extra_size(offsets)+rec_offs_data_size(offsets);
++    if(is_sec_index){
++        buf_size+=sizeof(trx_id_t);
++    }
++    value->buf = (rec_t*) ca_malloc(buf_size , fold);
++    if(value->buf==NULL){
++        //not enough mem
++        ut_print_timestamp(stderr);
++        fprintf(stderr,"[Warnning] malloc rec copy buf failded in create_row_cache_value !\n");
++        return NOT_ENOUGH_MEM;
++    }
++    memset(value->buf,0,buf_size);
++    value->fold = fold;
++    value->tree_id=index->id;
++	value->table_id=index->table->id;
++    value->rec = rec_copy(value->buf , rec , offsets);
++    if(is_sec_index){
++        trx_id_t* trx_id_in_rec=(trx_id_t*) (value->buf + buf_size - sizeof(trx_id_t));
++        *trx_id_in_rec = page_get_max_trx_id(page_align(rec)); 
++    }
++    value->buf_size=buf_size;
++    //trun off is_removed
++    offBit(value->flag,FLAG_VALUE_IS_REMOVED);
++    value->ref_num=0;
++    return 0;
++}
++
++void put_rec_to_row_cache(const dtuple_t*	tuple,
++    const rec_t*	rec,        /*!< in: physical record */
++    const ulint*	offsets,    /*!< in: array returned by rec_get_offsets() */
++                                const dict_index_t* index,
++                                ibool     is_sec_index)
++{  
++    row_cache_value_t* value;
++    ulint fold;
++    if (!innodb_row_cache_on)
++    {
++        return;
++    }
++    if(!is_index_need_cache(index)){
++        return;
++    }
++    //if rec is deleted ,it can,t be put into row cache
++    if(rec_get_deleted_flag(rec, dict_table_is_comp(index->table))){
++        return;
++    }
++    fold = calc_fold_by_rec(rec, offsets, dict_index_get_n_unique(index), index->id);
++    row_cache_enter_mutex(fold);
++    value = search_row_cache_value(tuple, index, fold);
++    if(value == NULL){
++        value = create_row_cache_value(rec, offsets, fold,index,is_sec_index);
++        if(value!=NULL){
++            insert_row_cache_value(fold,value);
++            add_row_cache_value_to_lru(value);
++        }
++    }else{
++        if(isValueRemoved(value->flag) && value->ref_num == 0){
++            //can be overwrite
++            if(update_row_cache_value(value,rec,offsets,fold,index,is_sec_index) == NOT_ENOUGH_MEM){
++                delete_row_cache_value(value);
++                remove_row_cache_value_from_lru(value);
++                ca_free_for_value(value , fold);  //value->buf already free in update_row_cache_value()
++            }else{
++                make_row_cache_value_first_from_lru(value);
++            }
++        }
++    }
++    row_cache_exit_mutex(fold);
++}
++
++static int add_row_cache_value_to_mtr(mtr_t* mtr , row_cache_value_t* value){
++    row_cache_value_queue_t* row_cache_value_queue;
++    row_cache_value_queue=(row_cache_value_queue_t*)ca_malloc_for_queue(value->fold);
++    if(NULL==row_cache_value_queue){
++        ut_print_timestamp(stderr);
++        fprintf(stderr,"[Warnning] malloc row_cache_value_queue_t failded in add_row_cache_value_to_mtr!\n");
++        return NOT_ENOUGH_MEM;
++    }
++    row_cache_value_queue->value = value;
++    UT_LIST_ADD_LAST(list,mtr->row_cache_value_queue_base,row_cache_value_queue);
++    return 0;
++}
++
++void release_row_cache_value_in_mtr( mtr_t* mtr )
++{
++    row_cache_value_queue_t* row_cache_value_queue;
++    if (!innodb_row_cache_on)
++    {
++        return;
++    }
++    while(mtr->row_cache_value_queue_base.count!=0){
++        ulint fold;
++        row_cache_value_queue = mtr->row_cache_value_queue_base.end;
++        //release Reference
++        fold = row_cache_value_queue->value->fold;
++        row_cache_enter_mutex(fold);
++        row_cache_value_queue->value->ref_num--;
++        UT_LIST_REMOVE(list,mtr->row_cache_value_queue_base,row_cache_value_queue);
++        ca_free_for_queue(row_cache_value_queue , fold) ;
++        row_cache_exit_mutex(fold);
++    }
++}
++
++static void free_row_cache_value(row_cache_value_t* value){
++    ulint fold =  value->fold;
++    ca_free(value->buf ,value->buf_size, fold);
++    ca_free_for_value(value , fold);
++}
++
++rec_t* get_from_row_cache_low(const ulint fold, const dtuple_t* tuple, const dict_index_t* index ,mtr_t* mtr)
++{
++    row_cache_value_t* value;
++    if (!innodb_row_cache_on)
++    {
++        return NULL;
++    }
++    if(!is_index_need_cache(index)){
++        return NULL;
++    }
++    row_cache_stat->n_get++;
++    row_cache_enter_mutex(fold);
++    value = search_row_cache_value(tuple, index, fold);
++    if(value!=NULL){
++        if(isValueRemoved(value->flag) && value->ref_num == 0){
++            //can be free
++            delete_row_cache_value(value);
++            remove_row_cache_value_from_lru(value);
++            free_row_cache_value(value);
++            value=NULL;
++        }else if(!isValueRemoved(value->flag)){
++            //can be read
++            if(add_row_cache_value_to_mtr(mtr,value)==0){
++                make_row_cache_value_first_from_lru(value);
++                value->ref_num++;
++            }else{
++                //not have enough mem
++                value=NULL;
++            }
++
++        }else{
++            // is removed can't be read
++            value=NULL;
++        }
++    }
++    row_cache_exit_mutex(fold);
++    if(value != NULL){
++        row_cache_stat->geted++;
++        return value->rec;
++    }
++    return NULL;
++}
++
++void remove_from_row_cache_low(const ulint fold,const rec_t*  rec, const ulint*	offsets, const dtuple_t* tuple, dict_index_t* index)
++{
++    row_cache_value_t* value = NULL;
++    if (!innodb_row_cache_on)
++    {
++        return;
++    }
++    row_cache_enter_mutex(fold);
++    if(rec && offsets){
++        value = search_row_cache_value_with_rec(rec,offsets,index,fold);
++    }else if(tuple){
++        value = search_row_cache_value(tuple, index, fold);
++    }
++    if(value != NULL){
++        if(value->ref_num == 0){
++            //can be free
++            delete_row_cache_value(value);
++            remove_row_cache_value_from_lru(value);
++            free_row_cache_value(value);
++            value=NULL;
++        }else{
++            //using just set is_removed = 1
++            onBit(value->flag,FLAG_VALUE_IS_REMOVED);
++        } 
++    }
++    row_cache_exit_mutex(fold);
++}
++
++ulint calc_fold_by_rec(const rec_t* rec, /*!< in: the physical record */ 
++    const ulint* offsets, /*!< in: array returned by rec_get_offsets() */ 
++    ulint n_fields, /*!< in: number of complete fields to fold */ 
++    dulint tree_id )
++{
++    return rec_fold(rec,offsets,n_fields,0,tree_id);
++}
++
++ulint lock_sec_rec_in_row_cache_cons_read_sees( const rec_t* rec, const ulint* offsets, const read_view_t* view )
++{
++    trx_id_t*	max_trx_id;
++	if (recv_recovery_is_on()) {
++
++		return(FALSE);
++	}
++
++	max_trx_id =(trx_id_t*) (rec+ rec_offs_data_size(offsets));
++	ut_ad(!ut_dulint_is_zero(*max_trx_id));
++
++	return(ut_dulint_cmp( *max_trx_id, view->up_limit_id) < 0);
++}
++
++void row_cache_refresh_stats()
++{
++    row_cache_stat->last_printout_time = time(NULL);
++    row_cache_stat->old_geted = row_cache_stat->geted;
++    row_cache_stat->old_n_get = row_cache_stat->n_get;
++    row_cache_lru_stat->old_n_add = row_cache_lru_stat->n_add;
++    row_cache_lru_stat->old_n_evict = row_cache_lru_stat->n_evict;
++    row_cache_lru_stat->old_n_make_first = row_cache_lru_stat->n_make_first;
++}
++
++void print_row_cache_stats( FILE* file )
++{
++    time_t	current_time;
++    double	time_elapsed;
++    ulint	n_gets_diff = 0;
++    unsigned long long n_geted_diff = 0;
++    unsigned long long mem_pool_used = row_cache_mem_pool_used();
++
++    fputs("----------------------\n"
++        "ROW CACHE\n"
++        "----------------------\n", file);
++    fprintf(file,
++        "Total memory allocated " ULINTPF
++        "; used " ULINTPF " (" ULINTPF " / 1000)" 
++        "; additional pool allocated " ULINTPF
++        "; Total LRU count " ULINTPF"\n",
++        (ulong) innodb_row_cache_mem_pool_size,
++        (ulong) mem_pool_used,
++        (ulong) (1000 * mem_pool_used / innodb_row_cache_mem_pool_size),
++        (ulong) innodb_row_cache_additional_mem_pool_size,
++        (ulong) get_row_cache_lru_count());
++
++    fprintf(file,
++        "Free Value Count  " ULINTPF
++        "; Free Queue Count  " ULINTPF "\n",
++        (ulong) row_cache_get_value_free_count(),
++        (ulong) row_cache_get_queue_free_count());
++    
++    current_time = time(NULL);
++    time_elapsed = 0.001 + difftime(current_time,
++        row_cache_stat->last_printout_time);
++
++    n_geted_diff = row_cache_stat->geted - row_cache_stat->old_geted;
++    n_gets_diff = row_cache_stat->n_get - row_cache_stat->old_n_get;
++
++    fprintf(file,
++        "Row total add " ULINTPF " , %.2f add/s \n"
++        "Row total make first " ULINTPF " , %.2f mf/s \n"
++        "Row total evict " ULINTPF " , %.2f evict/s \n"
++        "Row read from cache " ULINTPF ", %.2f read/s \n"
++        "Row get from cache " ULINTPF ", %.2f get/s \n" ,
++         (ulong) row_cache_lru_stat->n_add ,  
++         (row_cache_lru_stat->n_add-row_cache_lru_stat->old_n_add)/time_elapsed ,
++         (ulong) row_cache_lru_stat->n_make_first ,
++         (row_cache_lru_stat->n_make_first-row_cache_lru_stat->old_n_make_first)/time_elapsed ,
++         (ulong) row_cache_lru_stat->n_evict ,
++         (row_cache_lru_stat->n_evict-row_cache_lru_stat->old_n_evict)/time_elapsed ,
++         (ulong)  row_cache_stat->n_get ,
++         n_gets_diff/time_elapsed ,
++         (ulong)  row_cache_stat->geted ,
++         n_geted_diff/time_elapsed 
++         );
++
++    if (n_gets_diff)
++    {
++         fprintf(file,
++             "Row cache hit rate %lu / 1000 \n",
++              (ulong) (1000 * n_geted_diff) / n_gets_diff
++             );
++    } 
++    else
++    {
++        fputs("No row cache gets since the last printout\n",
++            file);
++    }
++
++    row_cache_refresh_stats();
++}
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/srv/srv0srv.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/srv/srv0srv.c	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/srv/srv0srv.c	(revision 724)
+@@ -85,6 +85,9 @@
+ #include "ha_prototypes.h"
+ #include "trx0i_s.h"
+ #include "os0sync.h" /* for HAVE_ATOMIC_BUILTINS */
++#include "row0cache.h" /* for row cache*/
++#include "row0cache0lru.h"
++#include "row0cache0mempool.h"
+ 
+ /* This is set to TRUE if the MySQL user has set it in MySQL; currently
+ affects only FOREIGN KEY definition parsing */
+@@ -996,6 +999,8 @@
+ 
+ 	/* Initialize some INFORMATION SCHEMA internal structures */
+ 	trx_i_s_cache_init(trx_i_s_cache);
++
++    init_row_cache();
+ }
+ 
+ /*********************************************************************//**
+@@ -1019,6 +1024,9 @@
+ 	srv_mysql_table = NULL;
+ 
+ 	trx_i_s_cache_free(trx_i_s_cache);
++
++    deinit_row_cache();
++
+ }
+ 
+ /*********************************************************************//**
+@@ -1672,6 +1680,8 @@
+ 
+ 	buf_refresh_io_stats();
+ 
++    row_cache_refresh_stats();
++
+ 	srv_n_rows_inserted_old = srv_n_rows_inserted;
+ 	srv_n_rows_updated_old = srv_n_rows_updated;
+ 	srv_n_rows_deleted_old = srv_n_rows_deleted;
+@@ -1812,6 +1822,8 @@
+ 
+ 	buf_print_io(file);
+ 
++    print_row_cache_stats(file);
++
+ 	fputs("--------------\n"
+ 	      "ROW OPERATIONS\n"
+ 	      "--------------\n", file);
+@@ -1955,6 +1967,18 @@
+ 	export_vars.innodb_rows_updated = srv_n_rows_updated;
+ 	export_vars.innodb_rows_deleted = srv_n_rows_deleted;
+ 
++
++    export_vars.innodb_row_cache_n_get = row_cache_stat->n_get;
++    export_vars.innodb_row_cache_geted = row_cache_stat->geted;
++
++    export_vars.innodb_row_cache_lru_n_add = row_cache_lru_stat->n_add;
++    export_vars.innodb_row_cache_lru_n_make_first = row_cache_lru_stat->n_make_first;
++    export_vars.innodb_row_cache_lru_n_evict = row_cache_lru_stat->n_evict;
++    export_vars.innodb_row_cache_lru_count = get_row_cache_lru_count();
++
++    export_vars.innodb_row_cache_mem_pool_size = innodb_row_cache_mem_pool_size;
++    export_vars.innodb_row_cache_mem_pool_used = row_cache_mem_pool_used();
++
+ 	mutex_exit(&srv_innodb_monitor_mutex);
+ }
+ 
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/srv/srv0start.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/srv/srv0start.c	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/srv/srv0start.c	(revision 724)
+@@ -62,6 +62,8 @@
+ #include "ibuf0ibuf.h"
+ #include "srv0start.h"
+ #include "srv0srv.h"
++#include "row0cache.h"
++#include "row0cache0filter.h"
+ #ifndef UNIV_HOTBACKUP
+ # include "os0proc.h"
+ # include "sync0sync.h"
+@@ -2005,6 +2007,7 @@
+ 	/* 3. Free all InnoDB's own mutexes and the os_fast_mutexes inside
+ 	them */
+ 	os_aio_free();
++    deinit_row_cache_filter(innodb_row_cache_on);
+ 	sync_close();
+ 	srv_free();
+ 	fil_close();
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/CMakeLists.txt
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/CMakeLists.txt	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/CMakeLists.txt	(revision 724)
+@@ -79,7 +79,9 @@
+ 			trx/trx0sys.c trx/trx0trx.c trx/trx0undo.c
+ 			usr/usr0sess.c
+ 			ut/ut0byte.c ut/ut0dbg.c ut/ut0mem.c ut/ut0rbt.c ut/ut0rnd.c ut/ut0ut.c ut/ut0vec.c
+-			ut/ut0list.c ut/ut0wqueue.c)
++			ut/ut0list.c ut/ut0wqueue.c
++			cache/row0cache.c cache/row0cache0hash.c cache/row0cache0lru.c cache/row0cache0mempool.c
++			cache/row0cache0filter.c)
+ # Windows atomics do not perform well. Disable Windows atomics by default.
+ # See bug#52102 for details.
+ #ADD_DEFINITIONS(-DHAVE_WINDOWS_ATOMICS -DINNODB_RW_LOCKS_USE_ATOMICS -DHAVE_IB_PAUSE_INSTRUCTION)
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/handler/ha_innodb.cc
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/handler/ha_innodb.cc	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/handler/ha_innodb.cc	(revision 724)
+@@ -83,11 +83,15 @@
+ #include "ha_prototypes.h"
+ #include "ut0mem.h"
+ #include "ibuf0ibuf.h"
++#include "row0cache0mempool.h"
++#include "row0cache0hash.h"
++#include "row0cache0filter.h"
++#include "row0cache0lru.h"
+ }
+ 
+ #include "ha_innodb.h"
+ #include "i_s.h"
+-
++ 
+ #ifndef MYSQL_SERVER
+ # ifndef MYSQL_PLUGIN_IMPORT
+ #  define MYSQL_PLUGIN_IMPORT /* nothing */
+@@ -556,6 +560,22 @@
+   (char*) &export_vars.innodb_rows_read,		  SHOW_LONG},
+   {"rows_updated",
+   (char*) &export_vars.innodb_rows_updated,		  SHOW_LONG},
++  {"row_cache_n_get",
++  (char*) &export_vars.innodb_row_cache_n_get,		  SHOW_LONG},
++  {"row_cache_n_geted",
++  (char*) &export_vars.innodb_row_cache_geted,		  SHOW_LONG},
++  {"row_cache_lru_count",
++  (char*) &export_vars.innodb_row_cache_lru_count,		  SHOW_LONG},
++  {"row_cache_lru_n_add",
++  (char*) &export_vars.innodb_row_cache_lru_n_add,		  SHOW_LONG},
++  {"row_cache_lru_n_evict",
++  (char*) &export_vars.innodb_row_cache_lru_n_evict,		  SHOW_LONG},
++  {"row_cache_lru_n_make_first",
++  (char*) &export_vars.innodb_row_cache_lru_n_make_first,		  SHOW_LONG},
++  {"row_cache_mem_pool_size",
++  (char*) &export_vars.innodb_row_cache_mem_pool_size,		  SHOW_LONGLONG},
++  {"row_cache_mem_pool_used",
++  (char*) &export_vars.innodb_row_cache_mem_pool_used,		  SHOW_LONG},
+   {NullS, NullS, SHOW_LONG}
+ };
+ 
+@@ -10604,6 +10624,45 @@
+ 	return(false);
+ }
+ 
++static
++void
++innodb_row_cache_index_update(
++/*===========================*/
++THD*				thd,		/*!< in: thread handle */
++struct st_mysql_sys_var*	var,		/*!< in: pointer to
++						system variable */
++void*				var_ptr,	/*!< out: where the
++						formal string goes */
++const void*			save)		/*!< in: immediate result
++						from check function */
++{
++    ut_a(var_ptr != NULL);
++    ut_a(save != NULL);
++
++    *static_cast<const char**>(var_ptr) = *static_cast<const char*const*>(save);
++    reset_filter();
++}
++
++static
++void
++innodb_row_cache_clean_cache_update(
++/*===========================*/
++THD*				thd,		/*!< in: thread handle */
++struct st_mysql_sys_var*	var,		/*!< in: pointer to
++						system variable */
++void*				var_ptr,	/*!< out: where the
++						formal string goes */
++const void*			save)		/*!< in: immediate result
++						from check function */
++{
++    ut_a(var_ptr != NULL);
++    ut_a(save != NULL);
++
++    if(*(my_bool*) save){
++        clean_row_cache();
++    }
++}
++
+ static SHOW_VAR innodb_status_variables_export[]= {
+   {"Innodb",                   (char*) &show_innodb_vars, SHOW_FUNC},
+   {NullS, NullS, SHOW_LONG}
+@@ -10886,6 +10945,47 @@
+   "trigger a readahead.",
+   NULL, NULL, 56, 0, 64, 0);
+ 
++static MYSQL_SYSVAR_LONGLONG(row_cache_mem_pool_size, innodb_row_cache_mem_pool_size,
++    PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
++    "The size of the memory buffer InnoDB uses to cache row.",
++    NULL, NULL, 1024*1024L, 1024*1024L, LONGLONG_MAX, 0);
++
++static MYSQL_SYSVAR_LONGLONG(row_cache_additional_mem_pool_size, innodb_row_cache_additional_mem_pool_size,
++    PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
++    "The size of the memory buffer InnoDB uses create buffer for cache row 's struct.",
++    NULL, NULL, 1024*1024L, 1024*1024L, LONGLONG_MAX, 0);
++
++static MYSQL_SYSVAR_BOOL(row_cache_on, innodb_row_cache_on,
++    PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
++    "Enable row cache",
++    NULL, NULL, FALSE);
++
++static MYSQL_SYSVAR_ULONG(row_cache_cell_num, innodb_row_cache_cell_num,
++    PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
++    "Number of row cache 's hash table cell.",
++    NULL, NULL, 10000L, 100L, ~0L, 0);
++
++static MYSQL_SYSVAR_UINT(row_cache_mutex_num_shift, innodb_row_cache_mutex_num_shift,
++    PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
++    "Number of row cache 's hash table mutex number's shift.",
++    NULL, NULL, 6, 1, 14, 0);
++
++static MYSQL_SYSVAR_STR(row_cache_index, innodb_row_cache_index,
++    PLUGIN_VAR_OPCMDARG,
++    "The config of index need to cache.",
++    NULL,
++    innodb_row_cache_index_update, NULL);
++
++static MYSQL_SYSVAR_BOOL(row_cache_clean_cache, innodb_row_cache_clean_cache,
++    PLUGIN_VAR_NOCMDARG,
++    "Set ON to Clean cache For DEBUG!",
++    NULL, innodb_row_cache_clean_cache_update, FALSE);
++
++static MYSQL_SYSVAR_BOOL(row_cache_use_sys_malloc, innodb_row_cache_use_sys_malloc,
++    PLUGIN_VAR_OPCMDARG | PLUGIN_VAR_READONLY,
++    "row cache use system malloc (disabled by default)",
++    NULL, NULL, FALSE);
++
+ static struct st_mysql_sys_var* innobase_system_variables[]= {
+   MYSQL_SYSVAR(additional_mem_pool_size),
+   MYSQL_SYSVAR(autoextend_increment),
+@@ -10942,6 +11042,14 @@
+   MYSQL_SYSVAR(change_buffering),
+   MYSQL_SYSVAR(read_ahead_threshold),
+   MYSQL_SYSVAR(io_capacity),
++  MYSQL_SYSVAR(row_cache_mem_pool_size),
++  MYSQL_SYSVAR(row_cache_additional_mem_pool_size),
++  MYSQL_SYSVAR(row_cache_on),
++  MYSQL_SYSVAR(row_cache_cell_num),
++  MYSQL_SYSVAR(row_cache_mutex_num_shift),
++  MYSQL_SYSVAR(row_cache_index),
++  MYSQL_SYSVAR(row_cache_clean_cache),
++  MYSQL_SYSVAR(row_cache_use_sys_malloc),
+   NULL
+ };
+ 
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0mempool.h
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0mempool.h	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0mempool.h	(revision 724)
+@@ -0,0 +1,57 @@
++/********************************************************************
++	created:	2011/03/23
++	created:	23:3:2011   14:49
++	filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include\row0cache0mempool.h
++	file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include
++	file base:	row0cache0mempool
++	file ext:	h
++	author:		wentong@taobao.vom
++	
++	purpose:	
++*********************************************************************/
++
++#ifndef row0cache0mempool_h__
++#define row0cache0mempool_h__
++
++#include "ut0rbt.h"
++#include "row0cache0hash.h"
++#include "row0cache.h"
++
++typedef long long llong;
++
++extern my_bool innodb_row_cache_use_sys_malloc;
++
++extern llong innodb_row_cache_mem_pool_size;
++
++extern llong innodb_row_cache_additional_mem_pool_size;
++
++#define NOT_ENOUGH_MEM 1
++
++void init_row_cache_mem_pool(my_bool innodb_row_cache_on);
++
++void deinit_row_cache_mem_pool();
++
++void* ca_malloc_low(ulint n , const ulint used_fold);
++
++void ca_free_low(void* ptr, const ulint size ,const ulint used_fold);
++
++#define ca_malloc(S,F) ca_malloc_low(S,F)
++#define ca_free(P,S,F) ca_free_low(P,S,F)
++
++//#define ca_malloc_for_value(F)  ca_malloc(sizeof(row_cache_value_t),F)
++//#define ca_free_for_value(S,F)  ca_free(S,F)
++
++//#define ca_malloc_for_queue(F)  ca_malloc(sizeof(row_cache_value_queue_t),F)
++//#define ca_free_for_queue(S,F)  ca_free(S,F)
++
++row_cache_value_t* ca_malloc_for_value(const ulint used_fold);
++void ca_free_for_value(row_cache_value_t* value, const ulint used_fold);
++
++row_cache_value_queue_t* ca_malloc_for_queue(const ulint used_fold); 
++void ca_free_for_queue(row_cache_value_queue_t* value, const ulint used_fold);
++
++ulint row_cache_mem_pool_used();
++ulint row_cache_get_value_free_count();
++ulint row_cache_get_queue_free_count();
++
++#endif // row0cache0mempool_h__
+\ No newline at end of file
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/srv0srv.h
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/srv0srv.h	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/srv0srv.h	(revision 724)
+@@ -629,6 +629,17 @@
+ 	ulint innodb_rows_inserted;		/*!< srv_n_rows_inserted */
+ 	ulint innodb_rows_updated;		/*!< srv_n_rows_updated */
+ 	ulint innodb_rows_deleted;		/*!< srv_n_rows_deleted */
++
++    ulint innodb_row_cache_n_get;
++    ulint innodb_row_cache_geted;
++
++    ulint innodb_row_cache_lru_n_add;
++    ulint innodb_row_cache_lru_n_make_first;
++    ulint innodb_row_cache_lru_n_evict;
++    ulint innodb_row_cache_lru_count;
++
++    ib_int64_t innodb_row_cache_mem_pool_size;
++    ib_int64_t innodb_row_cache_mem_pool_used;
+ };
+ 
+ /** The server system struct */
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0lru.h
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0lru.h	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0lru.h	(revision 724)
+@@ -0,0 +1,48 @@
++/********************************************************************
++	created:	2011/03/23
++	created:	23:3:2011   14:48
++	filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include\row0cache0lru.h
++	file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include
++	file base:	row0cache0lru
++	file ext:	h
++	author:		wentong@taobao.com
++	
++	purpose:	
++*********************************************************************/
++
++#ifndef row0cache0lru_h__
++#define row0cache0lru_h__
++
++#include "row0cache0hash.h"
++#include "rem0types.h"
++
++typedef struct struct_row_cache_lru_stat{
++    ulint n_add;
++    ulint n_make_first;
++    ulint n_evict;
++    ulint old_n_add;
++    ulint old_n_make_first;
++    ulint old_n_evict;
++}row_cache_lru_stat_t;
++
++extern row_cache_lru_stat_t* row_cache_lru_stat;
++
++extern my_bool innodb_row_cache_clean_cache;
++
++void init_innodb_row_cache_lru();
++
++void deinit_innodb_row_cache_lru();
++
++void clean_row_cache();
++
++void add_row_cache_value_to_lru(row_cache_value_t* value);
++
++void make_row_cache_value_first_from_lru(row_cache_value_t* value);
++
++ulint free_from_lru(const ulint size , const ulint used_fold);
++
++void remove_row_cache_value_from_lru(row_cache_value_t* value);
++
++ulint get_row_cache_lru_count();
++
++#endif // row0cache0lru_h__
+\ No newline at end of file
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/mtr0mtr.h
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/mtr0mtr.h	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/mtr0mtr.h	(revision 724)
+@@ -34,6 +34,7 @@
+ #include "ut0byte.h"
+ #include "mtr0types.h"
+ #include "page0types.h"
++#include "row0cache.h"
+ 
+ /* Logging modes for a mini-transaction */
+ #define MTR_LOG_ALL		21	/* default mode: log all operations
+@@ -387,6 +388,7 @@
+ #endif
+ 	dyn_array_t	memo;	/*!< memo stack for locks etc. */
+ 	dyn_array_t	log;	/*!< mini-transaction log */
++    UT_LIST_BASE_NODE_T(row_cache_value_queue_t) row_cache_value_queue_base; /*!< row cache lock queue base*/
+ 	ibool		modifications;
+ 				/* TRUE if the mtr made modifications to
+ 				buffer pool pages */
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/mtr0mtr.ic
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/mtr0mtr.ic	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/mtr0mtr.ic	(revision 724)
+@@ -42,6 +42,8 @@
+ 	dyn_array_create(&(mtr->memo));
+ 	dyn_array_create(&(mtr->log));
+ 
++    UT_LIST_INIT(mtr->row_cache_value_queue_base);
++
+ 	mtr->log_mode = MTR_LOG_ALL;
+ 	mtr->modifications = FALSE;
+ 	mtr->n_log_recs = 0;
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0hash.h
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0hash.h	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0hash.h	(revision 724)
+@@ -0,0 +1,88 @@
++/********************************************************************
++	created:	2011/03/24
++	created:	24:3:2011   8:48
++	filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include\row0cache0hash.h
++	file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include
++	file base:	row0cache0hash
++	file ext:	h
++	author:		wentong@taobao.com
++	
++	purpose:	
++*********************************************************************/
++#ifndef row0cache0hash_h__
++#define row0cache0hash_h__
++
++#include "hash0hash.h"
++#include "rem0types.h"
++#include "data0types.h"
++#include "ut0byte.h"
++#include "ut0rbt.h"
++#include "dict0types.h"
++
++//flag and bit handler
++#define onBit(flag,bit)   ((flag) |= (bit))
++#define offBit(flag,bit)   ((flag) &= ~(bit))
++#define testFlag(flag,bit)   (((flag) & (bit)) == (bit))
++
++
++typedef struct row_cache_chain row_cache_chain_t;
++typedef struct row_cache_value row_cache_value_t;
++typedef UT_LIST_BASE_NODE_T(row_cache_value_t) ROW_CACHE_VALUE_LIST_BASE;
++
++struct row_cache_chain{
++    row_cache_value_t* value;
++    row_cache_chain_t* next;
++};
++
++struct row_cache_value{
++    ulint		fold;
++    dulint      tree_id;
++	dulint      table_id;
++    rec_t*      buf;        /*!< the real mem*/
++    rec_t*	    rec;		/*!< the physical record */
++    ulint       buf_size;
++    UT_LIST_NODE_T(row_cache_value_t) list;
++    ulint ref_num;  /*!< the Reference Number */
++    unsigned char flag;
++    row_cache_chain_t chain;
++};
++
++#define FLAG_VALUE_IS_FROM_VALUE_POOL 1
++#define FLAG_VALUE_IS_REMOVED  (1<<1)
++
++#define isValueFromValuePool(flag) testFlag(flag,FLAG_VALUE_IS_FROM_VALUE_POOL)   
++#define isValueRemoved(flag) testFlag(flag,FLAG_VALUE_IS_REMOVED)    
++
++typedef struct ha_row_cache{
++    hash_table_t* row_cache;
++}row_cache_t;
++
++extern row_cache_t* innodb_row_cache;
++
++extern unsigned long innodb_row_cache_cell_num;
++
++extern unsigned int innodb_row_cache_mutex_num_shift;
++
++extern ulint innodb_row_cache_mutex_num;
++
++int init_row_cache_hash(my_bool innodb_row_cache_on);
++
++void deinit_row_cache_hash(my_bool innodb_row_cache_on);
++
++row_cache_value_t* search_row_cache_value(const dtuple_t* tuple ,const dict_index_t* index, const ulint fold);
++row_cache_value_t* search_row_cache_value_with_rec(const rec_t*  rec, const ulint*	rec_offsets, dict_index_t* index, const ulint fold);
++row_cache_value_t* insert_row_cache_value(const ulint fold , row_cache_value_t* value);
++void delete_row_cache_value(row_cache_value_t* value);
++
++ulint row_cache_enter_mutex_nowait(const ulint fold);
++void row_cache_enter_mutex(const ulint fold);
++void row_cache_exit_mutex(const ulint fold);
++
++int row_cache_own_mutex(const ulint fold1 , const ulint fold2);
++
++ulint row_cache_get_mutex_no(const ulint fold);
++
++void row_cache_enter_mutex_by_no(const ulint no);
++void row_cache_exit_mutex_by_no(const ulint no);
++
++#endif // row0cache0hash_h__
+\ No newline at end of file
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache.h
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache.h	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache.h	(revision 724)
+@@ -0,0 +1,87 @@
++/********************************************************************
++created:	2011/03/08
++created:	8:3:2011   10:56
++filename: 	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include\row0cache.h
++file path:	D:\Work\Project\VisualStudio\TAoBao-MySQL-Trunk\5.1.48\storage\innodb_plugin\include
++file base:	row0cache
++file ext:	h
++author:		wentong@taobao.com
++
++purpose:	for row cache
++*********************************************************************/
++#ifndef row0cache_h_
++#define row0cache_h_
++
++#include "univ.i"
++#include "rem0types.h"
++#include "data0types.h"
++#include "data0data.h"
++#include "ut0byte.h"
++#include "mtr0types.h"
++#include "ut0lst.h"
++#include "row0cache0hash.h"
++#include "read0types.h"
++
++extern my_bool innodb_row_cache_on;
++
++typedef struct struct_row_cache_stat{
++    ulint n_get; /*the total get*/
++    ulint geted; /*the get from row cache*/
++    ulint old_n_get;
++    ulint old_geted;
++    time_t	last_printout_time;
++}row_cache_stat_t;
++
++extern row_cache_stat_t* row_cache_stat;
++
++
++#define calc_fold_by_tuple(tuple , n_fields , tree_id) dtuple_fold((tuple) , (n_fields) , 0 , (tree_id))
++ulint calc_fold_by_rec(
++/*=====*/
++	const rec_t*	rec,		/*!< in: the physical record */
++	const ulint*	offsets,	/*!< in: array returned by
++					rec_get_offsets() */
++	ulint		n_fields,	/*!< in: number of complete
++					fields to fold */
++	dulint		tree_id);	/*!< in: index tree id */
++
++typedef struct row_cache_value_queue_struct row_cache_value_queue_t;
++
++struct row_cache_value_queue_struct{
++    row_cache_value_t* value;
++    /*!< linear list of dyn blocks: this node is
++    used only in the first block */
++    UT_LIST_NODE_T(row_cache_value_queue_t) list;
++    /*!< linear list node: used in all blocks */
++};
++
++typedef UT_LIST_BASE_NODE_T(row_cache_value_queue_t) ROW_CACHE_VALUE_QUEUE_LIST_BASE;
++
++void init_row_cache();
++
++void deinit_row_cache();
++
++void put_rec_to_row_cache(const dtuple_t*	tuple,
++                          const rec_t*	rec,        /*!< in: physical record */
++                          const ulint*	offsets,    /*!< in: array returned by rec_get_offsets() */
++	                      const dict_index_t* index,        /*!< in: index tree id */
++                          ibool     is_sec_index);  
++
++rec_t* get_from_row_cache_low(const ulint fold, const dtuple_t* tuple, const dict_index_t* index ,mtr_t* mtr);   /*!<in: mtr*/
++
++void remove_from_row_cache_low(const ulint fold, const rec_t*	rec, const ulint*	offsets,   const dtuple_t* tuple, dict_index_t* index);
++
++void release_row_cache_value_in_mtr(mtr_t* mtr);
++
++ulint lock_sec_rec_in_row_cache_cons_read_sees(const rec_t*	rec, const ulint* offsets, const read_view_t* view);
++
++#define get_from_row_cache(tuple , index , mtr)   get_from_row_cache_low(calc_fold_by_tuple((tuple) , (dict_index_get_n_unique(index)) , (index->id)), (tuple) ,(index) ,(mtr) )
++#define remove_from_row_cache(rec, offsets, index)  remove_from_row_cache_low(calc_fold_by_rec((rec), (offsets), (dict_index_get_n_unique(index)), (index->id)),(rec),(offsets) ,NULL,index)
++
++#define remove_from_row_cache_for_tuple(tuple, index)  remove_from_row_cache_low(calc_fold_by_tuple((tuple) , (dict_index_get_n_unique(index)) , (index->id)) , NULL,NULL,(tuple),(index))
++
++void row_cache_refresh_stats();
++
++void print_row_cache_stats(FILE* file);
++
++#endif
+\ No newline at end of file
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0filter.h
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0filter.h	(revision 0)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/include/row0cache0filter.h	(revision 724)
+@@ -0,0 +1,30 @@
++/********************************************************************
++	created:	2011/05/31
++	created:	31:5:2011   11:39
++	filename: 	E:\Work\Project\VS\taobao-mysql\row_cache\storage\innodb_plugin\include\row0cache0filter.h
++	file path:	E:\Work\Project\VS\taobao-mysql\row_cache\storage\innodb_plugin\include
++	file base:	row0cache0filter
++	file ext:	h
++	author:		wentong@taobao.com
++	
++	purpose:	
++*********************************************************************/
++
++#ifndef row0cache0filter_h__
++#define row0cache0filter_h__
++
++#include "hash0hash.h"
++#include "dict0types.h"
++
++#define INDEX_CONFIG_LEN 2048
++
++extern char* innodb_row_cache_index;
++
++void init_row_cache_filter(my_bool innodb_row_cache_on);
++void deinit_row_cache_filter(my_bool innodb_row_cache_on);
++
++void reset_filter();
++
++my_bool is_index_need_cache(const dict_index_t* index);
++
++#endif // row0cache0filter_h__
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0upd.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0upd.c	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0upd.c	(revision 724)
+@@ -32,6 +32,7 @@
+ #include "dict0dict.h"
+ #include "trx0undo.h"
+ #include "rem0rec.h"
++#include "row0cache.h"
+ #ifndef UNIV_HOTBACKUP
+ #include "dict0boot.h"
+ #include "dict0crea.h"
+@@ -1441,6 +1442,7 @@
+ 	rec_t*		rec;
+ 	ulint		err	= DB_SUCCESS;
+ 	mtr_t		mtr;
++    buf_block_t* block;
+ 	trx_t*		trx	= thr_get_trx(thr);
+ 
+ 	index = node->index;
+@@ -1458,6 +1460,7 @@
+ 
+ 	found = row_search_index_entry(index, entry, BTR_MODIFY_LEAF, &pcur,
+ 				       &mtr);
++    block = btr_pcur_get_block(&pcur);
+ 	btr_cur = btr_pcur_get_btr_cur(&pcur);
+ 
+ 	rec = btr_cur_get_rec(btr_cur);
+@@ -1502,6 +1505,13 @@
+ 		}
+ 	}
+ 
++    //TB_HOOK
++    if(dict_index_is_unique(index)){
++        ulint		offsets_[REC_OFFS_NORMAL_SIZE];
++        ulint*		offsets = rec_get_offsets( rec, index, offsets_, ULINT_UNDEFINED, &heap);
++        remove_from_row_cache(rec,offsets,index);
++    }
++
+ 	btr_pcur_close(&pcur);
+ 	mtr_commit(&mtr);
+ 
+@@ -1831,9 +1841,11 @@
+ 	mtr_t*		mtr;
+ 	mtr_t		mtr_buf;
+ 	rec_t*		rec;
++    ulint rec_fold;
+ 	mem_heap_t*	heap		= NULL;
+ 	ulint		offsets_[REC_OFFS_NORMAL_SIZE];
+ 	ulint*		offsets;
++    
+ 	rec_offs_init(offsets_);
+ 
+ 	index = dict_table_get_first_index(node->table);
+@@ -1893,7 +1905,7 @@
+ 
+ 	rec = btr_pcur_get_rec(pcur);
+ 	offsets = rec_get_offsets(rec, index, offsets_,
+-				  ULINT_UNDEFINED, &heap);
++		ULINT_UNDEFINED, &heap);
+ 
+ 	if (!node->has_clust_rec_x_lock) {
+ 		err = lock_clust_rec_modify_check_and_lock(
+@@ -1905,12 +1917,19 @@
+ 		}
+ 	}
+ 
++   
++
++    //rec_fold = calc_fold_by_rec(rec,offsets, block->n_fields , block->n_bytes ,index->id);
++    remove_from_row_cache(rec , offsets , index);
++
+ 	/* NOTE: the following function calls will also commit mtr */
+ 
+ 	if (node->is_delete) {
+ 		err = row_upd_del_mark_clust_rec(node, index, offsets,
+ 						 thr, check_ref, mtr);
+ 		if (err == DB_SUCCESS) {
++            //remove when delete is success
++            //remove_from_row_cache_low(rec_fold);
+ 			node->state = UPD_NODE_UPDATE_ALL_SEC;
+ 			node->index = dict_table_get_next_index(index);
+ 		}
+@@ -1939,6 +1958,10 @@
+ 	if (node->cmpl_info & UPD_NODE_NO_ORD_CHANGE) {
+ 
+ 		err = row_upd_clust_rec(node, index, thr, mtr);
++        if(err == DB_SUCCESS){
++            //remove when update is success
++            //remove_from_row_cache_low(rec_fold);
++        }
+ 		return(err);
+ 	}
+ 
+@@ -1975,6 +1998,8 @@
+ 
+ 		node->state = UPD_NODE_UPDATE_SOME_SEC;
+ 	}
++    //remove when update is success
++    //remove_from_row_cache_low(rec_fold);
+ 
+ 	node->index = dict_table_get_next_index(index);
+ 
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0uins.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0uins.c	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0uins.c	(revision 724)
+@@ -45,6 +45,8 @@
+ #include "que0que.h"
+ #include "ibuf0ibuf.h"
+ #include "log0log.h"
++#include "row0cache.h"
++#include "btr0sea.h"
+ 
+ /***************************************************************//**
+ Removes a clustered index record. The pcur in node was positioned on the
+@@ -56,18 +58,36 @@
+ /*==========================*/
+ 	undo_node_t*	node)	/*!< in: undo node */
+ {
++    dict_index_t*	index;
++    btr_pcur_t*	pcur;
++
+ 	btr_cur_t*	btr_cur;
+ 	ibool		success;
+ 	ulint		err;
+ 	ulint		n_tries		= 0;
+ 	mtr_t		mtr;
++    rec_t* rec;
+ 
++    mem_heap_t*	heap		= NULL;
++    ulint		offsets_[REC_OFFS_NORMAL_SIZE];
++    ulint*		offsets;
++    rec_offs_init(offsets_);
++
++    pcur = &(node->pcur);
++    index = dict_table_get_first_index(node->table);
++
+ 	mtr_start(&mtr);
+-
++   
+ 	success = btr_pcur_restore_position(BTR_MODIFY_LEAF, &(node->pcur),
+ 					    &mtr);
+ 	ut_a(success);
+ 
++	//TB_HOOK
++	rec =  btr_pcur_get_rec(pcur);
++	offsets = rec_get_offsets(rec, index, offsets_, ULINT_UNDEFINED, &heap);
++	remove_from_row_cache(rec , offsets,index);
++
++
+ 	if (ut_dulint_cmp(node->table->id, DICT_INDEXES_ID) == 0) {
+ 		ut_ad(node->trx->dict_operation_lock_mode == RW_X_LATCH);
+ 
+@@ -93,7 +113,9 @@
+ 
+ 	if (success) {
+ 		trx_undo_rec_release(node->trx, node->undo_no);
+-
++        if (UNIV_LIKELY_NULL(heap)) {
++            mem_heap_free(heap);
++        }    
+ 		return(DB_SUCCESS);
+ 	}
+ retry:
+@@ -129,6 +151,9 @@
+ 
+ 	trx_undo_rec_release(node->trx, node->undo_no);
+ 
++    if (UNIV_LIKELY_NULL(heap)) {
++        mem_heap_free(heap);
++    }    
+ 	return(err);
+ }
+ 
+@@ -335,6 +360,10 @@
+ 			transactions. */
+ 			ut_a(trx_is_recv(node->trx));
+ 		} else {
++            //TB_HOOK
++            if(dict_index_is_unique(node->index)){
++                remove_from_row_cache_for_tuple(entry ,  node->index);
++            }
+ 			err = row_undo_ins_remove_sec(node->index, entry);
+ 
+ 			if (err != DB_SUCCESS) {
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0sel.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0sel.c	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0sel.c	(revision 724)
+@@ -57,6 +57,7 @@
+ #include "read0read.h"
+ #include "buf0lru.h"
+ #include "ha_prototypes.h"
++#include "row0cache.h"
+ 
+ /* Maximum number of rows to prefetch; MySQL interface has another parameter */
+ #define SEL_MAX_N_PREFETCH	16
+@@ -2832,6 +2833,7 @@
+ 	rec_t*		old_vers;
+ 	ulint		err;
+ 	trx_t*		trx;
++    ibool is_get_from_row_cache = FALSE;
+ 
+ 	*out_rec = NULL;
+ 	trx = thr_get_trx(thr);
+@@ -2841,20 +2843,31 @@
+ 
+ 	clust_index = dict_table_get_first_index(sec_index->table);
+ 
+-	btr_pcur_open_with_no_init(clust_index, prebuilt->clust_ref,
+-				   PAGE_CUR_LE, BTR_SEARCH_LEAF,
+-				   prebuilt->clust_pcur, 0, mtr);
++    //TB_HOOK get_from_row_cache
++    if(prebuilt->select_lock_type == LOCK_NONE
++        && trx->mysql_n_tables_locked == 0){
++        clust_rec = get_from_row_cache(prebuilt->clust_ref,clust_index,mtr);
++        if (clust_rec!=NULL)
++        {
++            is_get_from_row_cache=TRUE;
++        }
++    }
+ 
+-	clust_rec = btr_pcur_get_rec(prebuilt->clust_pcur);
++    if(is_get_from_row_cache == FALSE){
++	    btr_pcur_open_with_no_init(clust_index, prebuilt->clust_ref,
++				       PAGE_CUR_LE, BTR_SEARCH_LEAF,
++				       prebuilt->clust_pcur, 0, mtr);
+ 
++	    clust_rec = btr_pcur_get_rec(prebuilt->clust_pcur);
++    }
+ 	prebuilt->clust_pcur->trx_if_known = trx;
+ 
+ 	/* Note: only if the search ends up on a non-infimum record is the
+ 	low_match value the real match to the search tuple */
+ 
+-	if (!page_rec_is_user_rec(clust_rec)
++	if (is_get_from_row_cache == FALSE && (!page_rec_is_user_rec(clust_rec)
+ 	    || btr_pcur_get_low_match(prebuilt->clust_pcur)
+-	    < dict_index_get_n_unique(clust_index)) {
++	    < dict_index_get_n_unique(clust_index))) {
+ 
+ 		/* In a rare case it is possible that no clust rec is found
+ 		for a delete-marked secondary index record: if in row0umod.c
+@@ -2935,7 +2948,14 @@
+ 			}
+ 
+ 			clust_rec = old_vers;
+-		}
++		}else{ 
++            //TB_HOOK put_rec_to_row_cache
++            if( is_get_from_row_cache == FALSE
++                && !prebuilt->templ_contains_blob
++                && !prebuilt->used_in_HANDLER){
++                put_rec_to_row_cache(prebuilt->clust_ref,clust_rec,*offsets ,clust_index ,FALSE);
++            }
++        }
+ 
+ 		/* If we had to go to an earlier version of row or the
+ 		secondary index record is delete marked, then it may be that
+@@ -2949,7 +2969,6 @@
+ 		a wrong result if we would not drop rows which we come to
+ 		visit through secondary index records that would not really
+ 		exist in our snapshot. */
+-
+ 		if (clust_rec
+ 		    && (old_vers
+ 			|| trx->isolation_level <= TRX_ISO_READ_UNCOMMITTED
+@@ -3235,6 +3254,18 @@
+ 	return(SEL_FOUND);
+ }
+ 
++static void put_rec_to_row_cache_in_sel( row_prebuilt_t* prebuilt, ulint direction, ibool unique_search, const rec_t* rec, ulint* offsets, dict_index_t* index ,ibool is_sec_index) 
++{
++    if( prebuilt->select_lock_type == LOCK_NONE
++        && direction == 0
++        && unique_search
++        && !prebuilt->templ_contains_blob
++        && !prebuilt->used_in_HANDLER){
++            put_rec_to_row_cache(prebuilt->search_tuple,rec,offsets ,index ,is_sec_index);
++    }
++}
++
++
+ /********************************************************************//**
+ Searches for rows in the database. This is used in the interface to
+ MySQL. This function opens a cursor, and also implements fetch next
+@@ -3294,6 +3325,7 @@
+ 	ibool		same_user_rec;
+ 	mtr_t		mtr;
+ 	mem_heap_t*	heap				= NULL;
++    ibool is_get_from_row_cache = FALSE;
+ 	ulint		offsets_[REC_OFFS_NORMAL_SIZE];
+ 	ulint*		offsets				= offsets_;
+ 
+@@ -3676,13 +3708,28 @@
+ 
+ 	} else if (dtuple_get_n_fields(search_tuple) > 0) {
+ 
+-		btr_pcur_open_with_no_init(index, search_tuple, mode,
+-					   BTR_SEARCH_LEAF,
+-					   pcur, 0, &mtr);
++        //TB_HOOK get_from_row_cache
++        if(prebuilt->select_lock_type == LOCK_NONE
++            && trx->mysql_n_tables_locked == 0
++            && direction == 0
++            && unique_search
++            && !prebuilt->used_in_HANDLER){
++                rec = get_from_row_cache(search_tuple,index,&mtr);
++                if (rec != NULL)
++                {
++                    is_get_from_row_cache = TRUE;
++                }
++        }
++        
++        if(is_get_from_row_cache == FALSE){
++		    btr_pcur_open_with_no_init(index, search_tuple, mode,
++					       BTR_SEARCH_LEAF,
++					       pcur, 0, &mtr);
+ 
+-		pcur->trx_if_known = trx;
++		    rec = btr_pcur_get_rec(pcur);
++        }
+ 
+-		rec = btr_pcur_get_rec(pcur);
++        pcur->trx_if_known = trx;
+ 
+ 		if (!moves_up
+ 		    && !page_rec_is_supremum(rec)
+@@ -3758,8 +3805,10 @@
+ rec_loop:
+ 	/*-------------------------------------------------------------*/
+ 	/* PHASE 4: Look for matching records in a loop */
+-
+-	rec = btr_pcur_get_rec(pcur);
++    if (is_get_from_row_cache == FALSE)
++    {
++	    rec = btr_pcur_get_rec(pcur);
++    }
+ 	ut_ad(!!page_rec_is_comp(rec) == comp);
+ #ifdef UNIV_SEARCH_DEBUG
+ 	/*
+@@ -3770,114 +3819,114 @@
+ 	rec_print(rec);
+ 	*/
+ #endif /* UNIV_SEARCH_DEBUG */
++    if(is_get_from_row_cache==FALSE){
++	    if (page_rec_is_infimum(rec)) {
+ 
+-	if (page_rec_is_infimum(rec)) {
++		    /* The infimum record on a page cannot be in the result set,
++		    and neither can a record lock be placed on it: we skip such
++		    a record. */
+ 
+-		/* The infimum record on a page cannot be in the result set,
+-		and neither can a record lock be placed on it: we skip such
+-		a record. */
++		    goto next_rec;
++	    }
+ 
+-		goto next_rec;
+-	}
++	    if (page_rec_is_supremum(rec)) {
+ 
+-	if (page_rec_is_supremum(rec)) {
++		    if (set_also_gap_locks
++		        && !(srv_locks_unsafe_for_binlog
++			     || trx->isolation_level <= TRX_ISO_READ_COMMITTED)
++		        && prebuilt->select_lock_type != LOCK_NONE) {
+ 
+-		if (set_also_gap_locks
+-		    && !(srv_locks_unsafe_for_binlog
+-			 || trx->isolation_level <= TRX_ISO_READ_COMMITTED)
+-		    && prebuilt->select_lock_type != LOCK_NONE) {
++			    /* Try to place a lock on the index record */
+ 
+-			/* Try to place a lock on the index record */
++			    /* If innodb_locks_unsafe_for_binlog option is used
++			    or this session is using a READ COMMITTED isolation
++			    level we do not lock gaps. Supremum record is really
++			    a gap and therefore we do not set locks there. */
+ 
+-			/* If innodb_locks_unsafe_for_binlog option is used
+-			or this session is using a READ COMMITTED isolation
+-			level we do not lock gaps. Supremum record is really
+-			a gap and therefore we do not set locks there. */
++			    offsets = rec_get_offsets(rec, index, offsets,
++						      ULINT_UNDEFINED, &heap);
++			    err = sel_set_rec_lock(btr_pcur_get_block(pcur),
++					           rec, index, offsets,
++					           prebuilt->select_lock_type,
++					           LOCK_ORDINARY, thr);
+ 
+-			offsets = rec_get_offsets(rec, index, offsets,
+-						  ULINT_UNDEFINED, &heap);
+-			err = sel_set_rec_lock(btr_pcur_get_block(pcur),
+-					       rec, index, offsets,
+-					       prebuilt->select_lock_type,
+-					       LOCK_ORDINARY, thr);
++			    if (err != DB_SUCCESS) {
+ 
+-			if (err != DB_SUCCESS) {
++				    goto lock_wait_or_error;
++			    }
++		    }
++		    /* A page supremum record cannot be in the result set: skip
++		    it now that we have placed a possible lock on it */
+ 
+-				goto lock_wait_or_error;
+-			}
+-		}
+-		/* A page supremum record cannot be in the result set: skip
+-		it now that we have placed a possible lock on it */
++		    goto next_rec;
++	    }
+ 
+-		goto next_rec;
+-	}
+-
+ 	/*-------------------------------------------------------------*/
+ 	/* Do sanity checks in case our cursor has bumped into page
+ 	corruption */
++	    if (comp) {
++		    next_offs = rec_get_next_offs(rec, TRUE);
++		    if (UNIV_UNLIKELY(next_offs < PAGE_NEW_SUPREMUM)) {
+ 
+-	if (comp) {
+-		next_offs = rec_get_next_offs(rec, TRUE);
+-		if (UNIV_UNLIKELY(next_offs < PAGE_NEW_SUPREMUM)) {
++			    goto wrong_offs;
++		    }
++	    } else {
++		    next_offs = rec_get_next_offs(rec, FALSE);
++		    if (UNIV_UNLIKELY(next_offs < PAGE_OLD_SUPREMUM)) {
+ 
+-			goto wrong_offs;
+-		}
+-	} else {
+-		next_offs = rec_get_next_offs(rec, FALSE);
+-		if (UNIV_UNLIKELY(next_offs < PAGE_OLD_SUPREMUM)) {
++			    goto wrong_offs;
++		    }
++        } 
+ 
+-			goto wrong_offs;
+-		}
+-	}
++	    if (UNIV_UNLIKELY(next_offs >= UNIV_PAGE_SIZE - PAGE_DIR)) {
+ 
+-	if (UNIV_UNLIKELY(next_offs >= UNIV_PAGE_SIZE - PAGE_DIR)) {
+-
+ wrong_offs:
+-		if (srv_force_recovery == 0 || moves_up == FALSE) {
+-			ut_print_timestamp(stderr);
+-			buf_page_print(page_align(rec), 0);
+-			fprintf(stderr,
+-				"\nInnoDB: rec address %p,"
+-				" buf block fix count %lu\n",
+-				(void*) rec, (ulong)
+-				btr_cur_get_block(btr_pcur_get_btr_cur(pcur))
+-				->page.buf_fix_count);
+-			fprintf(stderr,
+-				"InnoDB: Index corruption: rec offs %lu"
+-				" next offs %lu, page no %lu,\n"
+-				"InnoDB: ",
+-				(ulong) page_offset(rec),
+-				(ulong) next_offs,
+-				(ulong) page_get_page_no(page_align(rec)));
+-			dict_index_name_print(stderr, trx, index);
+-			fputs(". Run CHECK TABLE. You may need to\n"
+-			      "InnoDB: restore from a backup, or"
+-			      " dump + drop + reimport the table.\n",
+-			      stderr);
++		    if (srv_force_recovery == 0 || moves_up == FALSE) {
++			    ut_print_timestamp(stderr);
++			    buf_page_print(page_align(rec), 0);
++			    fprintf(stderr,
++				    "\nInnoDB: rec address %p,"
++				    " buf block fix count %lu\n",
++				    (void*) rec, (ulong)
++				    btr_cur_get_block(btr_pcur_get_btr_cur(pcur))
++				    ->page.buf_fix_count);
++			    fprintf(stderr,
++				    "InnoDB: Index corruption: rec offs %lu"
++				    " next offs %lu, page no %lu,\n"
++				    "InnoDB: ",
++				    (ulong) page_offset(rec),
++				    (ulong) next_offs,
++				    (ulong) page_get_page_no(page_align(rec)));
++			    dict_index_name_print(stderr, trx, index);
++			    fputs(". Run CHECK TABLE. You may need to\n"
++			          "InnoDB: restore from a backup, or"
++			          " dump + drop + reimport the table.\n",
++			          stderr);
+ 
+-			err = DB_CORRUPTION;
++			    err = DB_CORRUPTION;
+ 
+-			goto lock_wait_or_error;
+-		} else {
+-			/* The user may be dumping a corrupt table. Jump
+-			over the corruption to recover as much as possible. */
++			    goto lock_wait_or_error;
++		    } else {
++			    /* The user may be dumping a corrupt table. Jump
++			    over the corruption to recover as much as possible. */
+ 
+-			fprintf(stderr,
+-				"InnoDB: Index corruption: rec offs %lu"
+-				" next offs %lu, page no %lu,\n"
+-				"InnoDB: ",
+-				(ulong) page_offset(rec),
+-				(ulong) next_offs,
+-				(ulong) page_get_page_no(page_align(rec)));
+-			dict_index_name_print(stderr, trx, index);
+-			fputs(". We try to skip the rest of the page.\n",
+-			      stderr);
++			    fprintf(stderr,
++				    "InnoDB: Index corruption: rec offs %lu"
++				    " next offs %lu, page no %lu,\n"
++				    "InnoDB: ",
++				    (ulong) page_offset(rec),
++				    (ulong) next_offs,
++				    (ulong) page_get_page_no(page_align(rec)));
++			    dict_index_name_print(stderr, trx, index);
++			    fputs(". We try to skip the rest of the page.\n",
++			          stderr);
+ 
+-			btr_pcur_move_to_last_on_page(pcur, &mtr);
++			    btr_pcur_move_to_last_on_page(pcur, &mtr);
+ 
+-			goto next_rec;
+-		}
+-	}
++			    goto next_rec;
++		    }
++	    }
++    }
+ 	/*-------------------------------------------------------------*/
+ 
+ 	/* Calculate the 'offsets' associated with 'rec' */
+@@ -4118,6 +4167,11 @@
+ 			/* Do nothing: we let a non-locking SELECT read the
+ 			latest version of the record */
+ 
++            //TB_HOOK put_rec_to_row_cache
++            if(is_get_from_row_cache == FALSE){
++                put_rec_to_row_cache_in_sel(prebuilt, direction, unique_search, rec, offsets, index,index!=clust_index);
++            }
++
+ 		} else if (index == clust_index) {
+ 
+ 			/* Fetch a previous version of the row if the current
+@@ -4143,6 +4197,11 @@
+ 				}
+ 
+ 				if (old_vers == NULL) {
++					if(is_get_from_row_cache == TRUE){
++						//this should be Phantom read
++						err = DB_RECORD_NOT_FOUND;
++						goto normal_return;
++					}
+ 					/* The row did not exist yet in
+ 					the read view */
+ 
+@@ -4150,8 +4209,14 @@
+ 				}
+ 
+ 				rec = old_vers;
+-			}
+-		} else if (!lock_sec_rec_cons_read_sees(rec, trx->read_view)) {
++			} else{
++                //TB_HOOK put_rec_to_row_cache
++                if(is_get_from_row_cache == FALSE){
++                    put_rec_to_row_cache_in_sel(prebuilt, direction, unique_search, rec, offsets, index,index!=clust_index);
++                }
++            }
++		} else if ((is_get_from_row_cache == FALSE && !lock_sec_rec_cons_read_sees(rec, trx->read_view)) 
++            ||(is_get_from_row_cache == TRUE && !lock_sec_rec_in_row_cache_cons_read_sees(rec,offsets,trx->read_view))) {
+ 			/* We are looking into a non-clustered index,
+ 			and to get the right version of the record we
+ 			have to look also into the clustered index: this
+@@ -4161,7 +4226,12 @@
+ 			ut_ad(index != clust_index);
+ 
+ 			goto requires_clust_rec;
+-		}
++		} else{
++            //TB_HOOK put_rec_to_row_cache
++            if(is_get_from_row_cache == FALSE){
++                put_rec_to_row_cache_in_sel(prebuilt, direction, unique_search, rec, offsets, index,index!=clust_index);
++            }
++        }
+ 	}
+ 
+ 	/* NOTE that at this point rec can be an old version of a clustered
+@@ -4237,6 +4307,14 @@
+ 			/* The record did not exist in the read view */
+ 			ut_ad(prebuilt->select_lock_type == LOCK_NONE);
+ 
++            if(is_get_from_row_cache == TRUE){
++                // when is  is_get_from_row_cache ,if  clust_rec == NULL mean there is not record which can be
++                // read by this trx 
++                err = DB_RECORD_NOT_FOUND;
++
++                goto normal_return;
++            }
++
+ 			goto next_rec;
+ 		}
+ 
+@@ -4320,6 +4398,10 @@
+ 			goto got_row;
+ 		}
+ 
++        if(is_get_from_row_cache == TRUE){
++            goto got_row;
++        }
++
+ 		goto next_rec;
+ 	} else {
+ 		if (prebuilt->template_type == ROW_MYSQL_DUMMY_TEMPLATE) {
+@@ -4357,10 +4439,11 @@
+ 	return 'end of file'. Exceptions are locking reads and the MySQL
+ 	HANDLER command where the user can move the cursor with PREV or NEXT
+ 	even after a unique search. */
+-
+-	if (!unique_search_from_clust_index
++    //if get from row_cache ,it is no next or prev 
++	if (is_get_from_row_cache == FALSE
++        && (!unique_search_from_clust_index
+ 	    || prebuilt->select_lock_type != LOCK_NONE
+-	    || prebuilt->used_in_HANDLER) {
++	    || prebuilt->used_in_HANDLER)) {
+ 
+ 		/* Inside an update always store the cursor position */
+ 
+@@ -4372,6 +4455,7 @@
+ 	goto normal_return;
+ 
+ next_rec:
++    ut_ad(is_get_from_row_cache == FALSE);
+ 	/* Reset the old and new "did semi-consistent read" flags. */
+ 	if (UNIV_UNLIKELY(prebuilt->row_read_type
+ 			  == ROW_READ_DID_SEMI_CONSISTENT)) {
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0umod.c
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0umod.c	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/row/row0umod.c	(revision 724)
+@@ -43,6 +43,8 @@
+ #include "row0upd.h"
+ #include "que0que.h"
+ #include "log0log.h"
++#include "row0cache.h"
++#include "btr0sea.h"
+ 
+ /* Considerations on undoing a modify operation.
+ (1) Undoing a delete marking: all index records should be found. Some of
+@@ -113,6 +115,27 @@
+ 
+ 	ut_ad(success);
+ 
++	//TB_HOOK
++	{
++		dict_index_t*	index;
++		rec_t* rec;
++		mem_heap_t*	heap		= NULL;
++		ulint		offsets_[REC_OFFS_NORMAL_SIZE];
++		ulint*		offsets;
++		rec_offs_init(offsets_);
++
++		index = dict_table_get_first_index(node->table);
++		//TB_HOOK
++		rec =  btr_pcur_get_rec(pcur);
++		offsets = rec_get_offsets(rec, index, offsets_, ULINT_UNDEFINED, &heap);
++		remove_from_row_cache(rec , offsets ,index);
++
++		if (UNIV_LIKELY_NULL(heap)) {
++			mem_heap_free(heap);
++		}    
++	}
++	
++
+ 	if (mode == BTR_MODIFY_LEAF) {
+ 
+ 		err = btr_cur_optimistic_update(BTR_NO_LOCKING_FLAG
+@@ -239,6 +262,7 @@
+ 	pcur = &(node->pcur);
+ 
+ 	mtr_start(&mtr);
++   
+ 
+ 	/* Try optimistic processing of the record, keeping changes within
+ 	the index page */
+@@ -296,7 +320,7 @@
+ 			node->state = UNDO_NODE_PREV_VERS;
+ 		}
+ 	}
+-
++ 
+ 	return(err);
+ }
+ 
+@@ -561,6 +585,10 @@
+ 			transactions. */
+ 			ut_a(thr_is_recv(thr));
+ 		} else {
++            //TB_HOOK
++            if(dict_index_is_unique(index)){
++                remove_from_row_cache_for_tuple(entry , index);
++            }
+ 			err = row_undo_mod_del_mark_or_remove_sec(
+ 				node, thr, index, entry);
+ 
+@@ -603,6 +631,10 @@
+ 		entry = row_build_index_entry(node->row, node->ext,
+ 					      index, heap);
+ 		ut_a(entry);
++        //TB_HOOK
++        if(dict_index_is_unique(index)){
++            remove_from_row_cache_for_tuple(entry , index);
++        }
+ 		err = row_undo_mod_del_unmark_sec_and_undo_update(
+ 			BTR_MODIFY_LEAF, thr, index, entry);
+ 		if (err == DB_FAIL) {
+@@ -658,6 +690,11 @@
+ 			entry = row_build_index_entry(node->row, node->ext,
+ 						      index, heap);
+ 			ut_a(entry);
++            //TB_HOOK
++            if(dict_index_is_unique(index)){
++                remove_from_row_cache_for_tuple(entry , index);
++            }
++
+ 			/* NOTE that if we updated the fields of a
+ 			delete-marked secondary index record so that
+ 			alphabetically they stayed the same, e.g.,
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/Makefile.am
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/Makefile.am	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/storage/innodb_plugin/Makefile.am	(revision 724)
+@@ -226,6 +226,11 @@
+ 			include/ut0vec.h	\
+ 			include/ut0vec.ic	\
+ 			include/ut0wqueue.h	\
++			include/row0cache.h     \
++			include/row0cache0hash.h     \
++			include/row0cache0lru.h      \
++			include/row0cache0mempool.h  \
++			include/row0cache0filter.h   \
+ 			mem/mem0dbg.c
+ 
+ EXTRA_LIBRARIES=	libinnobase.a
+@@ -323,7 +328,13 @@
+ 			ut/ut0rnd.c			\
+ 			ut/ut0ut.c			\
+ 			ut/ut0vec.c			\
+-			ut/ut0wqueue.c
++			ut/ut0wqueue.c                  \
++			cache/row0cache.c               \
++			cache/row0cache0hash.c          \
++			cache/row0cache0lru.c           \
++			cache/row0cache0mempool.c       \
++		        cache/row0cache0filter.c	
++			
+ 
+ libinnobase_a_CXXFLAGS=	$(AM_CFLAGS)
+ libinnobase_a_CFLAGS=	$(AM_CFLAGS)
+Index: E:/Work/Project/VS/taobao-mysql/row_cache/sql/CMakeLists.txt
+===================================================================
+--- E:/Work/Project/VS/taobao-mysql/row_cache/sql/CMakeLists.txt	(revision 118)
++++ E:/Work/Project/VS/taobao-mysql/row_cache/sql/CMakeLists.txt	(revision 724)
+@@ -111,7 +111,7 @@
+   ENDFOREACH (CORELIB ${MYSQLD_CORE_LIBS})
+  
+   ADD_CUSTOM_COMMAND(TARGET mysqld PRE_LINK
+-    COMMAND cscript ARGS //nologo ${PROJECT_SOURCE_DIR}/win/create_def_file.js
++    COMMAND cscript ARGS //nologo //E:JScript ${PROJECT_SOURCE_DIR}/win/create_def_file.js
+                   ${PLATFORM}  ${LIB_LOCATIONS} > mysqld.def 
+     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/sql)
+ ENDIF(MSVC AND NOT WITHOUT_DYNAMIC_PLUGINS)

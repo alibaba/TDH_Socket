@@ -1,0 +1,72 @@
+1.Installation
+How to install row cache for innodb. The patch is for mysql 5.1.48 or mysql 5.5.21 or percona server 5.5.18
+
+  Installation Steps
+      a) Download mysql 5.1.48 source code if you don't have. Link is http://downloads.mysql.com/archives/mysql-5.1/mysql-5.1.48.tar.gz
+      b) Decompress the mysql source code.
+         tar zvxf mysql-5.1.48.tar.gz
+      c) Apply the patch in the source root directory .
+         patch -p0 < ./row_cache_for_mysql.5.1.48_2011_05_11.diff
+      d) Configure.
+         CFLAGS="-O3" CXX=gcc CXXFLAGS="-O3 -felide-constructors -fno-exceptions -fno-rtti" ./configure --prefix=/usr/mysql --with-extra-charsets=all --with-plugins=partition,heap,innobase,myisam,myisammrg,csv --enable-assembler
+      e) make && make install
+      
+2.Setting
+  Setting added in my.cnf(The Row Cache is based on innodb_plugin):
+     innodb_row_cache_mem_pool_size
+       the size of row cache used in memory.
+       default is 1M
+     innodb_row_cache_on
+       the switch for row cache,if you want enable row cache,it need to be ON,
+       default is OFF.
+     innodb_row_cache_cell_num
+       the row cache used hash table's cell num.
+       default is 1000
+     innodb_row_cache_mutex_num_shift
+       the shift for row cache mutex num, more large higher concurrency ,it can refer to innodb_thread_concurrency ,recommend (1<<innodb_row_cache_mutex_num_shift) slightly higher than innodb_thread_concurrency .
+       default is 6
+     innodb_row_cache_additional_mem_pool_size
+       the size of additional for misc memory allocate
+       default is 1M
+     innodb_row_cache_index
+       you can set index which can be cached!
+       like test/test_large:idx_age, test is DB , test_large is TABLE, idx_age is INDEX,if you want to cache primary key, use PRIMARY
+       you can use * or ? for wildcard character
+       default is NULL ,mean cache all index
+     innodb_row_cache_clean_cache
+       this setting is for debug, if you set this to 1 online, it can clean the row cache
+       it always be 0
+     innodb_row_cache_use_sys_malloc
+       if you set this variable to ON , it use system malloc instead of mempool in innodb , if you use TC_Malloc or JE_malloc ,you can set it to ON for less memory fragment
+       default is OFF
+3.Status
+  You can find more status where run show status,it is:
+    Innodb_row_cache_n_get
+      Total number which get from Row Cache, it inculde the missing gets.
+    Innodb_row_cache_n_geted
+      The number of real geted from Row Cache ,it exculde the missing gets.
+    Innodb_row_cache_lru_count
+      Total number which Row Cache is cached.
+    Innodb_row_cache_lru_n_add
+      Number of row added to Row Cache.
+    Innodb_row_cache_lru_n_evict
+      Number of row evicted from Row Cache.
+    Innodb_row_cache_lru_n_make_first
+      Number of row which is made first to LRU list
+    Innodb_row_cache_mem_pool_size
+      The mem pool size of Row Cache.
+    Innodb_row_cache_mem_pool_used
+      Used size in Row Cache's mem pool
+
+  When you run "show innodb status",you can see some message more then original one, which like:
+	----------------------
+	ROW CACHE
+	----------------------
+	Total memory allocated 5368709120; used 5367472576 (999 / 1000); Total LRU count 12569422
+	Row total add 30544838 , 344.35 add/s
+	Row total make first 771088189 , 13720.31 mf/s
+	Row total evict 17975130 , 332.97 evict/s
+	Row read from cache 802835501, 14085.11 read/s
+	Row get from cache 772330451, 13740.67 get/s
+	Row cache hit rate 975 / 1000
+	you can see cache hit!

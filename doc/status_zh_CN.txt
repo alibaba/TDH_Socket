@@ -1,0 +1,55 @@
+﻿Status:
+----------------------------------
+  tdhs_table_open
+    被TDH_Socket打开的table的次数
+----------------------------------
+  tdhs_table_close
+    被TDH_Socket关闭的table的次数
+----------------------------------
+  tdhs_table_lock
+    被TDH_Socket锁的table的次数
+----------------------------------
+  tdhs_table_unlock
+    被TDH_Socket解锁的table的次数(也可以理解为事务提交数)
+----------------------------------
+  tdhs_get_count
+    执行的GET请求的数目
+----------------------------------
+  tdhs_count_count
+    执行的COUNT请求的数目
+----------------------------------
+  tdhs_update_count
+    执行的UPDATE请求的数目
+----------------------------------
+  tdhs_delete_count
+    执行的DELETE请求的数目
+----------------------------------
+  tdhs_insert_count
+    执行的INSERT请求的数目
+----------------------------------
+  tdhs_batch_count
+    执行的BATCH请求的数目
+----------------------------------
+  tdhs_thread_strategy
+    当前的读策略是个啥? 1 ,2 or 3
+----------------------------------
+  tdhs_last_io_read_per_second
+    最后一次统计的每秒的Innodb_buffer_pool_reads差值
+----------------------------------
+  tdhs_optimize_status
+    当开启optimize时,记录的各组bloom filter的数目 如idx[0] num[0,0,0,0,0], idx为当前判断的bloom filter组id
+----------------------------------
+  tdhs_optimize_lv3_assign_to_quick_count    
+    当在LV3并开启optimize时,被分配到TDH_SOCKET_QUICK类型线程的请求数
+----------------------------------
+  tdhs_optimize_lv3_assign_to_slow_count    
+    当在LV3并开启optimize时,被分配到TDH_SOCKET_SLOW类型线程的请求数
+----------------------------------
+  tdhs_active_slow_read_thread_num
+    当前TDH_SOCKET_SLOW类型线程活跃的线程数
+----------------------------------
+  tdhs_throttle_count
+    被流控掉的请求数
+----------------------------------
+  tdhs_slow_read_done_count
+    没有被流控的请求数

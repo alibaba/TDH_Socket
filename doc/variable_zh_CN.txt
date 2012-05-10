@@ -1,0 +1,155 @@
+﻿Variable:
+--------------------------------------
+  tdh_socket_listen_port
+    TDH_Socket的监听端口
+    默认值:9999
+--------------------------------------    
+  tdh_socket_log_level
+    TDH_Socket的log级别:
+    OFF:1 FATAL:2 ERROR:3 WARN:4 INFO:5 DEBUG:6 TRACE:7 ALL:8
+    默认值:3
+--------------------------------------    
+  tdh_socket_io_thread_num  
+    TDH_Socket处理网络io的线程数
+    默认值:4
+--------------------------------------
+  tdh_socket_thread_num
+    TDH_Socket处理快读请求的线程数 即TDH_SOCKET_QUICK类型线程的数目
+    默认值:8
+--------------------------------------
+  tdh_socket_slow_read_thread_num
+    TDH_Socket处理慢读请求的线程数 即TDH_SOCKET_SLOW类型线程的数目
+    默认值:28
+--------------------------------------
+#########################################
+关于tdh_socket_thread_num和tdh_socket_slow_read_thread_num:
+在TDH_Socket中读是有策略的,分为3层策略 LV1 LV2 LV3
+策略的切换由每秒的Innodb_buffer_pool_reads数决定 见tdh_socket_thread_strategy_requests_lv_1和tdh_socket_thread_strategy_requests_lv_2这两个配置项
+当在LV1时,所有的读请求会全部会分配到TDH_SOCKET_QUICK类型线程中(数目由tdh_socket_thread_num决定)
+当在LV2时,所有的读请求会分配到TDH_SOCKET_QUICK类型线程和按比例部分到TDH_SOCKET_SLOW类型线程(数目由tdh_socket_slow_read_thread_num决定)中.
+  这个比例就是(每秒Innodb_buffer_pool_reads-tdh_socket_thread_strategy_requests_lv_1)/(tdh_socket_thread_strategy_requests_lv_1和tdh_socket_thread_strategy_requests_lv_2-tdh_socket_thread_strategy_requests_lv_1)
+当在LV3时,如果没有开启tdh_socket_optimize_on,那么和LV2一样,只不过TDH_SOCKET_SLOW类型线程会被全部使用起来
+  如果开启了tdh_socket_optimize_on,那么请求会按统计分为快请求(请求的数据可能在内存中)和慢请求(请求的数据可能会在磁盘中)
+  快请求会被分配到TDH_SOCKET_QUICK类型线程,慢请求会被分配到TDH_SOCKET_SLOW类型线程.
+  如果还开启了tdh_socket_throttle_on,那么配合tdh_socket_slow_read_limits
+  如果过每秒大于tdh_socket_slow_read_limits数目的慢请求会被直接返回错误信息回去,达到流控慢请求的目的
+  PS:由于流控算法的特殊性.当tdh_socket_slow_read_limits设置为很小时,如2,这么会加大统计慢请求的时间,
+  使流控的同时也能充分的利用完磁盘io,也使输出的QPS很平稳.当然QPS的提升可能没tdh_socket_slow_read_limits设置为较大数目时那么大
+  具体如何设置就看业务需要了
+#########################################    
+-------------------------------------
+  tdh_socket_write_thread_num    
+    TDH_Socket处理写请求的线程数 即TDH_SOCKET_WRITE类型线程的数目
+    默认值:1
+--------------------------------------
+  tdh_socket_optimize_on    
+    是否开启读优化
+    默认值:OFF    
+--------------------------------------
+  tdh_socket_optimize_bloom_filter_group
+    读优化开启时,采用bloom filter作为统计信息存储.tdh_socket_optimize_bloom_filter_group表示bloom filter的组数
+    组数越多,统计越精确
+    默认值:5
+--------------------------------------
+  tdh_socket_optimize_bloom_filter_num_buckets
+    读优化开启时,采用bloom filter作为统计信息存储.
+    tdh_socket_optimize_bloom_filter_num_buckets表示一个bloom filter的大小,越大那么才生碰撞的可能性就越小
+    默认值:16k
+--------------------------------------
+  tdh_socket_optimize_guess_hot_request_num
+    读优化开启时,采用bloom filter作为统计信息存储.
+    tdh_socket_optimize_guess_hot_request_num表示可能的热门请求的数量是多少,此值根据业务情况的设定
+    默认值:5,000,000
+--------------------------------------
+  tdh_socket_throttle_on
+    开启即开启流控
+    默认值:OFF
+--------------------------------------
+  tdh_socket_slow_read_limits
+  当开启流控时,每秒超过tdh_socket_slow_read_limits数目的请求可能会被流控
+  默认值:2
+#########################################
+关于optimize:
+如上当在读策略在LV3,并开启tdh_socket_optimize_on时,就会进入优化
+优化的目的就是为了区分快请求(请求的数据可能在内存中)和慢请求(请求的数据可能会在磁盘中),并交由不同的线程池执行,避免相互干扰
+如果在编译时开启了--enable-tdhs-row-cache那么这个预测是较为准确的
+如果没有开启那么将采用bloom filter的方式记住请求hash.越近被执行的请求,那么其结果越有可能在内存中
+为了节省内存使用bloom filter作为载体
+通过多组bloom filter轮换的机制,达到可以淘汰老请求的目的
+#########################################
+--------------------------------------
+  tdh_socket_monitor_interval
+    监控线程监控数据的时间间隔(单位:秒)
+    每一次tdh_socket_monitor_interval将会统计每秒的Innodb_buffer_pool_reads差值,
+    以此来确定读策略的等级和TDH_SOCKET_SLOW线程池的可活跃线程数
+    默认值:5
+--------------------------------------
+  tdh_socket_thread_strategy_requests_lv_1
+    每秒的Innodb_buffer_pool_reads差值小于tdh_socket_thread_strategy_requests_lv_1,读策略为LV1,否则为LV2
+    默认值:128
+--------------------------------------
+  tdh_socket_thread_strategy_requests_lv_2
+    每秒的Innodb_buffer_pool_reads差值小于tdh_socket_thread_strategy_requests_lv_2,读策略为LV2,否则为LV3
+    默认值:1024
+--------------------------------------
+  tdh_socket_concurrency_insert
+    当关闭时,insert的请求会按照所请求的table的hash值分配至相应的TDH_SOCKET_WRITE类型线程上,以保证相同表的请求会被同一个线程执行
+    当开启时,默认情况下insert的请求会被轮询给不同的TDH_SOCKET_WRITE类型线程执行,
+    但是客户端可以通过指定一个hash值,准确要求这个请求被指定的TDH_SOCKET_WRITE类型线程执行
+    默认值:OFF
+--------------------------------------
+  tdh_socket_concurrency_update
+    当关闭时,update的请求会按照所请求的table的hash值分配至相应的TDH_SOCKET_WRITE类型线程上,以保证相同表的请求会被同一个线程执行
+    当开启时,默认情况下update的请求会被轮询给不同的TDH_SOCKET_WRITE类型线程执行,
+    但是客户端可以通过指定一个hash值,准确要求这个请求被指定的TDH_SOCKET_WRITE类型线程执行
+    默认值:OFF    
+--------------------------------------
+  tdh_socket_concurrency_delete
+    当关闭时,delet的请求会按照所请求的table的hash值分配至相应的TDH_SOCKET_WRITE类型线程上,以保证相同表的请求会被同一个线程执行
+    当开启时,默认情况下delet的请求会被轮询给不同的TDH_SOCKET_WRITE类型线程执行,
+    但是客户端可以通过指定一个hash值,准确要求这个请求被指定的TDH_SOCKET_WRITE类型线程执行
+    默认值:OFF 
+--------------------------------------
+  tdh_socket_group_commit
+    当开启时,TDH_SOCKET_WRITE类型线程上会一次轮询统一提交一次事务
+    当关闭时,TDH_SOCKET_WRITE类型线程上会为一个请求提交一次事务(BATCH请求还是保证在一次事务内)
+    主要了当tdh_socket_concurrency_*被打开时,可能出现的死锁情况,但是为降低写入的性能
+    默认值:OFF
+--------------------------------------
+  tdh_socket_auth_on
+    是否开启验证,开启后需要在连接时输入正确的验证码才能获取相应的权限
+    见:tdh_socket_auth_read_code 和 tdh_socket_auth_write_code
+    默认OFF
+--------------------------------------
+  tdh_socket_auth_read_code
+    读权限的验证码
+    如果开启tdh_socket_auth_on的话,需要在握手时输入read_code并匹配tdh_socket_auth_read_code才能有读权限
+    默认:空
+--------------------------------------
+  tdh_socket_auth_write_code
+    写权限的验证码
+    如果开启tdh_socket_auth_on的话,需要在握手时输入write_code并匹配tdh_socket_auth_write_code才能有写权限  
+    默认:空
+--------------------------------------
+  tdh_socket_cache_table_on
+    是否开启TDH_Socket线程缓存table的设置
+    设置tdh_socket_cache_table_on为OFF时,会直接关闭已经被缓存的table.
+    在做DDL操作之前先设置tdh_socket_cache_table_on为OFF就不会堵住DDL操作了
+    当然如果你忘记了,已经导致DDL hang在那里的话,再设置tdh_socket_cache_table_on为OFF也能解决问题
+    默认值:ON
+--------------------------------------
+  tdh_socket_cache_table_num_for_thd
+    设置每个线程能缓存的table数.
+    在开启tdh_socket_cache_table_on的情况下,
+    如果每个TDH_Socket的线程一次轮询打开的table数如果小于等于tdh_socket_cache_table_num_for_thd设定的数目,
+    那么这些table是不会被close的,方便下次直接复用
+    默认值:3
+--------------------------------------
+  tdh_socket_write_buff_size
+    设置写的缓存区大小,这个值和stream方式返回有关,
+    当返回的数据大小大于tdh_socket_write_buff_size设定的值时,数据将会被立马发送给客户端,然后服务端再接着发送剩余的数据
+    默认值:8k
+--------------------------------------
+
+    
+    

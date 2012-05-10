@@ -1,0 +1,320 @@
+协议:
+
+Header : Request/Response都会有的头 有5部分组成 共20 bytes
+
+   |---------------------|--------------------------|--------------------------------|------------|---------------------|--------------------------
+   |----4 bytes----------|----4 bytes---------------|---4 bytes----------------------|---4 bytes--|---4 bytes-----------|---- data length bytes----
+   |magic code:0xFFFFFFFF|command id for request    |sequence id                     |  reserved  |data length          | the data content        
+                         |response code for response|should be unique on a connection|            |exclude header length|
+   
+   样例: 一个握手报文
+   |FF FF FF FF|00 00 FF FF|00 00 00 00|00 00 00 00|00 00 00 1A|54 44 48 53 00 00 00 01 00 00 03 E8 00 00 00 03 61 62 00 00 00 00 03 63 64 00|
+   |magic code |command id |sequence id|reserved   |data length| the content which length is 26
+   |0xFFFFFFFF |0xFFFF     |0          |           |   26      |
+               |SHAKE_HANDS|
+
+Common: 一些公用的设计
+   普通数字:
+      |---4 bytes---|
+      |   uint32_t	|
+   
+   flag: 比如一些枚举的变量
+      |---1 byte----|
+      |  uint8_t    |
+	
+
+   字符串:
+      |-------------------------------|----------------------------------|
+      |-----------4 bytes ------------|----string length bytes-----------|
+      |string length                  |the string is include '\0' at last|
+      |the string is C string         |
+      |the length include '\0' at last|  
+
+      样例:
+      |00 00 00 03|61 62 00     |
+      |length is 3|value is "ab"|
+      
+      特殊情况说明:
+         ""空字符串:|00 00 00 01|00|  length为1 content为0x00
+         真正的NULL:|00 00 00 00|     length为0 没有content
+
+   数组:
+      |---------------------------|-----------------
+      |------ 4 bytes-------------|----------------
+      |the element number of array| the elements may be string,maybe number,or all of them
+
+      一个简单数组例子:
+      |00 00 00 02|00 00 00 03|69 64 00|00 00 00 05|64 61 74 61 00|
+      |有2个元素  |第一个字符串"id"    |第二个字符串"data"        |
+                  |cstr len: 3|"id"    |cstr len:5 |"data"        |
+
+      一个复杂数组例子:
+      |00 00 00 02|00 00 00 03|69 64 00|01|00 00 00 02|31 00|00 00 00 03|69 64 00|02|00 00 00 03|31 30 00|
+      |有2个元素  |         第一个复杂元素,由3部分组成      |                第二个复杂元素,由3部分组成  | 
+                  |    字符串"id"      |>=|    字符串"1"    |    字符串"id"      |<=|      字符串"10"    |
+                                        ^                                         ^
+                                        flag表明操作类型                          flag表明操作类型
+
+
+正题开始
+Request: 请求
+   握手报文:
+      command id: 0xFFFF (REQUEST_TYPE_SHAKE_HANDS)
+    	    一个连接建立时必须第一个发送一个握手报文
+      格式:
+      |-----------|-----------------|------------|--------------|----------------------|-----------------------|
+      |--20 bytes-|--4 bytes--------|---4 bytes--|---4 bytes----|        字符串        |        字符串         |
+      |   header  |magic code:"TDHS"|  version:1 | time out(ms) |read code if need auth|write code if need auth|
+
+      样例: 一个完整握手报文
+      |FF FF FF FF|00 00 FF FF|00 00 00 00|00 00 00 00|00 00 00 1A|54 44 48 53|00 00 00 01|00 00 03 E8|00 00 00 03 61 62 00|00 00 00 03 63 64 00|
+      |magic code |command id |sequence id|reserved   |data length| magic code| version   | time out  | read code          | write code         |
+      |0xFFFFFFFF |0xFFFF     |0          |           |   26      | "TDHS"    |     1     | 1000      | "ab"               | "cd"
+                  |SHAKE_HANDS|
+
+   GET请求报文:
+      command id: 0 (REQUEST_TYPE_GET)
+	    用于获取数据
+	    
+      格式:  
+      |Header|字符串:db名称|字符串:表名|字符串:索引名|简单数组:查询字段|复杂数组:查询的key|flag:查询操作|普通数字:start|普通数字:limit |复杂数组:filter|
+      
+      PS:
+      	  GET请求使用了Header中的reserved字段.如果reserved>0，并且开启线程策略为LV1的时候，可以根据reserved的值来指定固定的QUICK读线程来执行
+          索引名 可为NULL,即默认使用主键索引
+          索引名 也可以为数字,即对应的索引offset
+          查询字段 为简单数组,内容为字符串
+          查询的key 为复杂数组,内容为一个简单数组,而简单数组的内容为字符串
+          查询操作 
+          						TDHS_EQ = 0, // = for asc
+								TDHS_GE = 1, // >=
+								TDHS_LE = 2, // <=
+								TDHS_GT = 3, // >
+								TDHS_LT = 4, // <
+								TDHS_IN = 5, // in
+								TDHS_DEQ = 6, // = for desc
+				  limit 为0的话表示不进行limit
+          filter 为复杂数组,内容由3部分组成 字符串:字段名 flag:对比类型 字符串:对比值
+          					对比类型
+          											TDHS_FILTER_EQ = 0, // =
+													TDHS_FILTER_GE = 1, // >=
+													TDHS_FILTER_LE = 2, // <=
+													TDHS_FILTER_GT = 3, // >
+													TDHS_FILTER_LT = 4, // <
+													TDHS_FILTER_NOT = 5, // !
+    
+      样例:
+      |FF FF FF FF|00 00 00 00|00 00 00 01|00 00 00 00|00 00 00 6A|00 00 00 05|74 65 73 74 00|00 00 00 02 62 00|00 00 00 00|00 00 00 02|00 00 00 03|69 64 00|00 00 00 05|64 61 74 61 00|00 00 00 02|00 00 00 01|00 00 00 02|31 00|00 00 00 01|00 00 00 03|31 31 00|05      |00 00 00 00|00 00 00 00|00 00 00 02|00 00 00 03|69 64 00|01|00 00 00 02|31 00|00 00 00 03|69 64 00|02|00 00 00 03|31 30 00|
+      |magic code |command id |sequence id|reserved   |data length| db名                     |    表名         | 索引名    |            字段                                           |             查询的keys                                                   |查询操作|  start    |  limit    |                       filters                                                                    |
+      |0xFFFFFFFF |   0       |    1      |           |   106     |      "test"              |    "b"          |  PRIMARY  |               ["id","data"]                               |                [["1"],["11"]]                                            |in      |   0       |   0       |        [[字段"id",>=,值"1"],[[字段"id",<=1,值"10"]                                               |
+    
+   COUNT请求报文:
+       command id: 1 (REQUEST_TYPE_COUNT) 
+       用于统计符合条件的记录数
+       
+       格式:
+       |Header|等同GET请求的全部报文内容|
+       
+       PS:
+       		COUNT的报文与GET的报文基本一样..只是COUNT报文里面 查询的字段可以为NULL
+       		COUNT请求使用了Header中的reserved字段.如果reserved>0，并且开启tdh_socket_concurrency_delete=ON的话，可以根据reserved的值来指定固定的写线程来执行
+       		
+       		
+       样例:
+       |FF FF FF FF|00 00 00 0B|00 00 00 01|00 00 00 00|00 00 00 5A|00 00 00 05|74 65 73 74 00|00 00 00 02|62 00|00 00 00 00|00 00 00 00|00 00 00 02|00 00 00 01|00 00 00 02|32 00|00 00 00 01|00 00 00 03|31 32 00|05      |00 00 00 00|00 00 00 00|00 00 00 02|00 00 00 03|69 64 00|01|00 00 00 02|31 00|00 00 00 03|69 64 00|02|00 00 00 03|31 30 00|
+       |magic code |command id |sequence id|reserved   |data length|    db名                  |    表名         | 索引名    |   字段    |    查询的keys                                                            |查询操作|  start    |  limit    |                       filters                                                                    |
+       |0xFFFFFFFF |   11      |    1      |           |   90      |     "test"               |    "b"          |  PRIMARY  |不需要字段 |  [["1"],["11"]]                                                          |   in   |   0       |   0       |        [[字段"id",>=,值"1"],[[字段"id",<=1,值"10"]                                               |
+       
+   
+   UPDATE请求报文:
+      command id: 10 (REQUEST_TYPE_UPDATE) 
+      用于更新数据
+      
+      格式:
+      |Header|等同GET请求的全部报文内容|复杂数组:需要更新的值|
+      
+      PS:
+      		同GET请求报文的一切PS
+      		需要更新的字段即GET请求报文中的查询字段
+      		更新字段的数目需要和更新值的数目匹配起来
+      		需要更新的值 为复杂数组 内容由2部分组成 flag:更新操作 字符串:更新的值
+      		    更新操作
+      		    	TDHS_UPDATE_SET = 0 // =
+      		    	TDHS_UPDATE_ADD = 1 // +=
+      		    	TDHS_UPDATE_SUB = 2 // -=
+      		UPDATE请求使用了Header中的reserved字段.如果reserved>0，并且开启tdh_socket_concurrency_update=ON的话，可以根据reserved的值来指定固定的写线程来执行
+      		    	
+      样例:
+      |FF FF FF FF|00 00 00 0A|00 00 00 01|00 00 00 00|00 00 00 48|00 00 00 05|74 65 73 74 00|00 00 00 02|62 00|00 00 00 00|00 00 00 01|00 00 00 05|64 61 74 61 00|00 00 00 01|00 00 00 01|00 00 00 02|31 00|00      |00 00 00 00|00 00 00 00|00 00 00 00|00 00 00 01|00|00 00 00 04|61 62 63 00|
+      |magic code |command id |sequence id|reserved   |data length|    db名                  |    表名         | 索引名    |         字段                         |          查询的keys                     |查询操作|  start    |  limit    |  fliter   |    更新的值                          |
+      |0xFFFFFFFF |   10      |    1      |           |   72      |     "test"               |    "b"          |  PRIMARY  |           ["data"]                   |          [["1"]]                        |   =    |   0       |   0       | 没有filter| 将data字段更新为"abc"                |
+      
+      
+    DELETE请求报文:
+       command id: 11 (REQUEST_TYPE_DELETE) 
+       用于删除数据
+       
+       格式:
+       |Header|等同GET请求的全部报文内容|
+       
+       PS:
+       		DELETE的报文与GET的报文基本一样..只是DELETE报文里面 查询的字段可以为NULL
+       		DELETE请求使用了Header中的reserved字段.如果reserved>0，并且开启tdh_socket_concurrency_delete=ON的话，可以根据reserved的值来指定固定的写线程来执行
+       		
+       		
+       样例:
+       |FF FF FF FF|00 00 00 0B|00 00 00 01|00 00 00 00|00 00 00 5A|00 00 00 05|74 65 73 74 00|00 00 00 02|62 00|00 00 00 00|00 00 00 00|00 00 00 02|00 00 00 01|00 00 00 02|32 00|00 00 00 01|00 00 00 03|31 32 00|05      |00 00 00 00|00 00 00 00|00 00 00 02|00 00 00 03|69 64 00|01|00 00 00 02|31 00|00 00 00 03|69 64 00|02|00 00 00 03|31 30 00|
+       |magic code |command id |sequence id|reserved   |data length|    db名                  |    表名         | 索引名    |   字段    |    查询的keys                                                            |查询操作|  start    |  limit    |                       filters                                                                    |
+       |0xFFFFFFFF |   11      |    1      |           |   90      |     "test"               |    "b"          |  PRIMARY  |不需要字段 |  [["1"],["11"]]                                                          |   in   |   0       |   0       |        [[字段"id",>=,值"1"],[[字段"id",<=1,值"10"]                                               |
+       
+       
+       
+   INSERT请求报文:
+      command id : 12 (REQUEST_TYPE_INSERT)
+      用于插入数据
+      
+      格式:
+      |Header|字符串:db名称|字符串:表名|字符串:索引名|简单数组:插入字段|复杂数组:插入的值|
+      
+      PS:
+      插入的字段数需要和插入的值的数量一致
+      索引名可为NULL
+      需要插入的值 为复杂数组 内容由2部分组成 flag:更新操作 字符串:更新的值
+      		    更新操作
+      		    	TDHS_UPDATE_SET = 0 // =
+      		    	TDHS_UPDATE_ADD = 1 // +=
+      		    	TDHS_UPDATE_SUB = 2 // -=
+      INSERT请求使用了Header中的reserved字段.如果reserved>0，并且开启tdh_socket_concurrency_insert=ON的话，可以根据reserved的值来指定固定的写线程来执行
+         
+      
+      
+      样例:
+      |FF FF FF FF|00 00 00 0C|00 00 00 01|00 00 00 00|00 00 00 2C|00 00 00 05|74 65 73 74 00|00 00 00 02|62 00|00 00 00 00|00 00 00 01|00 00 00 05|64 61 74 61 00|00 00 00 01|00|00 00 00 04|61 62 63 00|
+      |magic code |command id |sequence id|reserved   |data length|    db名                  |    表名         | 索引名    |   插入的字段                         |   插入的值                           |
+      |0xFFFFFFFF |   12      |    1      |           |   44      |     "test"               |    "b"          |  PRIMARY  |  ["data"]                            |   ["abc"]                            |
+   
+   BATCH请求报文:
+   		command id : 20 (REQUEST_TYPE_BATCH)
+   		批量且有事务的进行insert/update/delete等操作...实际上BATCH报文是一个大报文包含了需要batch处理的小报文
+   		
+   		
+   		格式:
+      |Header|请求1|请求2|....|请求N|
+      
+      PS:
+      BATCH请求使用了Header中的reserved字段.来表明这个BATCH请求具体包含了几个小请求
+      
+      样例:
+      |FF FF FF FF|00 00 00 14|00 00 00 04|00 00 00 03        |00 00 01 0A|FF FF FF FF 00 00 00 0C 00 00 00 01 00 00 00 00 00 00 00 3E 00 00 00 05 74 65 73 74 00 00 00 00 05 74 65 73 74 00 00 00 00 00 00 00 00 02 00 00 00 03 69 64 00 00 00 00 05 64 61 74 61 00 00 00 00 02 00 00 00 04 31 31 31 00 00 00 00 04 31 31 31 00|FF FF FF FF 00 00 00 0A 00 00 00 02 00 00 00 00 00 00 00 52 00 00 00 05 74 65 73 74 00 00 00 00 05 74 65 73 74 00 00 00 00 05 7C 69 64 7C 00 00 00 00 01 00 00 00 05 64 61 74 61 00 00 00 00 01 00 00 00 01 00 00 00 04 31 31 31 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 04 31 31 32 00|FF FF FF FF 00 00 00 0C 00 00 00 03 00 00 00 00 00 00 00 3E 00 00 00 05 74 65 73 74 00 00 00 00 05 74 65 73 74 00 00 00 00 00 00 00 00 02 00 00 00 03 69 64 00 00 00 00 05 64 61 74 61 00 00 00 00 02 00 00 00 04 31 31 32 00 00 00 00 04 33 33 33 00|
+      |magic code |command id |sequence id|reserved           |data length|              第一个请求为INSERT                                                                                                                                                                                                                     |                            第二个请求 为UPDATE                                                                                                                                                                                                                                                                  |                                第3个请求 为 INSERT                                                                                                                                                                                                  |                                                          
+      |0xFFFFFFFF |   20      |    4      |3:表明包含了3个请求|   266     |
+      
+Response:返回
+   失败返回:
+   			格式:
+   			
+         |-----------|-----------------|
+         |--20 bytes-|--4 bytes--------|
+         |   header  |error code       |
+   
+   
+   			response code:
+	   			//请求导致的错误信息
+					CLIENT_STATUS_BAD_REQUEST = 400,
+					CLIENT_STATUS_FORBIDDEN = 403, //没权限
+					CLIENT_STATUS_NOT_FOUND = 404, //没有找到资源,如 db/table/index 等
+					CLIENT_STATUS_REQUEST_TIME_OUT = 408, //超时
+					//服务器导致的错误信息
+					CLIENT_STATUS_SERVER_ERROR = 500, //server无法处理的错误,比如内存不够
+					CLIENT_STATUS_NOT_IMPLEMENTED = 501, //server没实现这个功能
+					CLIENT_STATUS_DB_ERROR = 502, //handler返回的错误信息
+					CLIENT_STATUS_SERVICE_UNAVAILABLE = 503 //被kill这种情况或可能的负载过重
+					
+			 error code:
+					CLIENT_ERROR_CODE_FAILED_TO_OPEN_TABLE = 1     //无法打开表
+					CLIENT_ERROR_CODE_FAILED_TO_OPEN_INDEX = 2     //找不到索引 
+					CLIENT_ERROR_CODE_FAILED_TO_MISSING_FIELD = 3  //有找不到的字段
+					CLIENT_ERROR_CODE_FAILED_TO_MATCH_KEY_NUM = 4  //索引需要的key的数目不对
+					CLIENT_ERROR_CODE_FAILED_TO_LOCK_TABLE = 5     //锁表失败
+					CLIENT_ERROR_CODE_NOT_ENOUGH_MEMORY = 6        //没有足够的内存
+					CLIENT_ERROR_CODE_DECODE_REQUEST_FAILED = 7    //解码请求失败
+					CLIENT_ERROR_CODE_FAILED_TO_MISSING_FIELD_IN_FILTER_OR_USE_BLOB = 8 //filter里没有找到对应的字段,或字段是Blob类型
+					CLIENT_ERROR_CODE_FAILED_TO_COMMIT = 9         //commit失败
+					CLIENT_ERROR_CODE_NOT_IMPLEMENTED = 10         //功能没实现
+					CLIENT_ERROR_CODE_REQUEST_TIME_OUT = 11        //超时
+					CLIENT_ERROR_CODE_UNAUTHENTICATION = 12        //认证失败
+					CLIENT_ERROR_CODE_KILLED = 13                  //请求被kill
+					CLIENT_ERROR_CODE_THROTTLED = 14               //请求被流控
+					
+					
+			PS:
+				当response code:返回CLIENT_STATUS_DB_ERROR时 error code为mysql的内部错误吗~ 比如重复键之类的错误码~
+				
+			样例:
+			
+			|FF FF FF FF|00 00 01 90|00 00 00 01|00 00 00 00|00 00 00 04|00 00 00 01                           |
+			|magic code |resp code  |sequence id|reserved   |data length| error code                           |
+			|0xFFFFFFFF |   400     |    1      |           |   4       |CLIENT_ERROR_CODE_FAILED_TO_OPEN_TABLE|
+			
+
+   成功的返回:
+			
+			格式:
+      |-----------|-----------------|---------------------|---------------------------------------
+      |--20 bytes-|--4 bytes--------|field number * 1 byte|  row number*field number*field value
+      |   header  | field number    |field types          |一个值都以字符串的形式来返回,一行记录以查询字段的顺序返回,接着返回第二行记录
+      
+      response code:
+      	//正确返回status
+				CLIENT_STATUS_OK = 200, //完成所有数据的返回
+				CLIENT_STATUS_ACCEPT = 202, //对于流的处理,还有未返回的数据
+				CLIENT_STATUS_MULTI_STATUS = 207, //对于batch请求的返回,表示后面跟了多个请求
+			
+			field type:
+				MYSQL_TYPE_DECIMAL = 0
+				MYSQL_TYPE_TINY = 1
+				MYSQL_TYPE_SHORT = 2
+				MYSQL_TYPE_LONG = 3
+				MYSQL_TYPE_FLOAT = 4
+				MYSQL_TYPE_DOUBLE = 5
+				MYSQL_TYPE_NULL = 6
+				MYSQL_TYPE_TIMESTAMP = 7
+				MYSQL_TYPE_LONGLONG = 8
+				MYSQL_TYPE_INT24 = 9
+				MYSQL_TYPE_DATE = 10
+				MYSQL_TYPE_TIME = 11
+				MYSQL_TYPE_DATETIME = 12
+				MYSQL_TYPE_YEAR = 13
+				MYSQL_TYPE_NEWDATE = 14
+				MYSQL_TYPE_VARCHAR = 15
+				MYSQL_TYPE_BIT = 16
+				MYSQL_TYPE_NEWDECIMAL = 246
+				MYSQL_TYPE_ENUM = 247
+				MYSQL_TYPE_SET = 248
+				MYSQL_TYPE_TINY_BLOB = 249
+				MYSQL_TYPE_MEDIUM_BLOB = 250
+				MYSQL_TYPE_LONG_BLOB = 251
+				MYSQL_TYPE_BLOB = 252
+				MYSQL_TYPE_VAR_STRING = 253
+				MYSQL_TYPE_STRING = 254
+				MYSQL_TYPE_GEOMETRY = 255
+				
+			PS:
+				请求为Update或Delete时 返回的结果为一条记录两个字段的值 第一个值为被updated的记录数,第二个为真正被changed的记录数
+				请求为Insert时 返回的结果是为一条记录一个字段的值 这个值为刚才被插入的记录的主键(自增时),否则为0
+				返回的response code为CLIENT_STATUS_ACCEPT表示数据没有全部返回回来.是不完整的,
+				    需要当返回CLIENT_STATUS_OK时才表示数据全部被返回,这样将全部的返回数据合并起来才能被完整解析出来
+				当返回CLIENT_STATUS_MULTI_STATUS时的data length为0 仅仅表明BATCH执行完成
+				当请求为BATCH时应该首先解析BATCH请求对应的RESPONSE 如果为CLIENT_STATUS_MULTI_STATUS 再解析后续的具体请求的结果,
+						如果不是CLIENT_STATUS_MULTI_STATUS,那么表明在执行之前就已经出错了,比如超时等,这个时候对于包含的请求是不会返回结果的
+				
+			特别注意:	    
+				这个返回的字符串和请求发送的字符串格式是不一样的..即不是C类型字符串length 不包括'\0' content中也没有'\0'
+				那么""空字符串需要怎么表示呢?
+				这个和请求的空字符串表示一样
+				|00 00 00 01|00|  length为1 content为0x00
+				    
+		 样例:
+		 |FF FF FF FF|00 00 00 C8|00 00 00 01|00 00 00 00|00 00 00 12|00 00 00 02|0F FE     |00 00 00 01|31|00 00 00 03|61 62 63|.......
+		 |magic code |resp code  |sequence id|reserved   |data length|field numer|field type|  有一条记录 两个字段              | 下一条记录
+		 |0xFFFFFFFF |   200     |    1      |           |   18      |两个字段   |字段类型  |第1个字段值"1"|第2个字段值"abc"    | 下一条记录的字段值
