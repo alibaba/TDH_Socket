@@ -2,8 +2,7 @@ About TDH_Socket_Plugin_for_MySQL
 
     TDH_Socket_Plugin_for_MySQL is a MySQL plugin which like HandlerSocket(https://github.com/DeNADev/HandlerSocket-Plugin-for-MySQL).
     And it provide more features and better performance.
-    It direct access the MySQL handler to bypass sql parse for better performance,
-      and it use thread pool and a series of strategy to have high performance.
+    It direct access the MySQL handler to bypass sql parse for better performance, and it use thread pool and a series of strategy to have high performance.
 	
 		Features:
 			1.Like HandlerSocket with Full Functionality
