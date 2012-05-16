@@ -23,7 +23,7 @@ TDH_Socket的一些特性和优点:
     4.支持流输出,对于大数量的返回,不会占用太多内存
     5.易用
       a)不需要在一开始open_table,会在具体执行时open_table,被open的table还是会被当前线程cache住,下次请求不需要再次open
-      b)Java客户端支持JDBC,在客户端进行SQL解析
+      b)Java客户端(https://github.com/taobao/tdhs-java-client)支持JDBC,在客户端进行SQL解析
     6.支持多线程的并发写操作
       a)默认情况下,对一个表的写操作都会在一个固定的线程被执行,从而避免可能的死锁
       b)也可以通过配置使一个表的写操作被多个线程并发执行,但是可能会导致死锁而进行回滚

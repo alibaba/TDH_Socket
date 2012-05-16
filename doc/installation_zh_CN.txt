@@ -38,7 +38,7 @@
     
 3.TDH_Socket的客户端
    目前在项目中包含了Java客户端和Python客户端
-   1) Java客户端 见/java目录
+   1) Java客户端 (https://github.com/taobao/tdhs-java-client)
      a)Java客户端是一个高性能的客户端,基于Netty,并且支持JDBC,对于应用来说迁移起来很方便
      b)直接用法见/java/src/test/java/benchmark目录,这个目录下提供了一些常见的性能评估工具
      c)JDBC用法见/java/src/test/java/com/taobao/tdhs/client/jdbc/test 下的测试用例

@@ -12,7 +12,7 @@ It direct access the MySQL handler to bypass sql parse for better performance, a
 	* Large amount of data ,less memory used
 5. Easy to use
 	* Execute command without open_table at first(it can be cached with thread)
-	* Java Client support JDBC
+	* Java Client (https://github.com/taobao/tdhs-java-client) support JDBC
 6. Support multithreading modifying operation
 	* A table must be executed in a constant thread
 	* One table modifying operation can be configured for concurrency (may cause deadlock)
