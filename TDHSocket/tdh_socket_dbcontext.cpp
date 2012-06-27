@@ -951,7 +951,7 @@ bool tdhs_dbcontext::is_in_cache(tdhs_request_t &req) {
 	hnd->init_table_handle_for_HANDLER();
 	hnd->ha_index_or_rnd_end();
 	hnd->ha_index_init(tdhs_table.idxnum, 1);
-	const key_part_map kpm = (1U << req.get.key_num) - 1;
+	const key_part_map kpm = (1U << req.get.keys[0].key_field_num) - 1;
 	ret = hnd->ha_is_in_cache(key_buf, kpm);
 	hnd->ha_index_or_rnd_end();
 	return ret;
