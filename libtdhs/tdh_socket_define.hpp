@@ -336,7 +336,7 @@ struct tdhs_client_wait_t{
 	bool is_inited;
 	bool is_waiting;
 	bool is_closed;
-	unsigned long *use_stream_count;
+	void *db_context;
 	easy_client_wait_t client_wait;
 };
 

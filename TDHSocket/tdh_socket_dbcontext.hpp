@@ -1,11 +1,10 @@
 /*
-* Copyright(C) 2011-2012 Alibaba Group Holding Limited
-* 
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License version 2 as
-* published by the Free Software Foundation.
-*/
-
+ * Copyright(C) 2011-2012 Alibaba Group Holding Limited
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
 
 /*
  * tdh_socket_dbcontext.hpp
@@ -53,6 +52,7 @@ public:
 	virtual int destory() = 0;
 	virtual int execute(easy_request_t *r) = 0;
 	virtual void set_thd_info(unsigned int bulk_request_num) = 0;
+	virtual void using_stream() = 0;
 	virtual void set_group_commit(bool gc) = 0;
 	virtual time_t* get_thd_time() = 0;
 #ifdef TDHS_ROW_CACHE

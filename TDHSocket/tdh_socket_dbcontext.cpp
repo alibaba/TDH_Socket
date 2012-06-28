@@ -81,6 +81,7 @@ public:
 	virtual void close_cached_table();
 	virtual int execute(easy_request_t *r);
 	virtual void set_thd_info(unsigned int bulk_request_num);
+	virtual void using_stream();
 	virtual void set_group_commit(bool gc);
 	virtual time_t* get_thd_time();
 #ifdef TDHS_ROW_CACHE
@@ -252,6 +253,11 @@ void tdhs_dbcontext::set_thd_info(unsigned int bulk_request_num) {
 			bulk_request_num);
 }
 
+void tdhs_dbcontext::using_stream() {
+	thd_proc_info(thd, info);
+	set_thread_message(info, "TDHS:send stream[%lu]", ++use_stream_count);
+}
+
 void tdhs_dbcontext::set_group_commit(bool gc) {
 	if (need_write()) {
 		bulk = gc;
@@ -356,8 +362,7 @@ void tdhs_dbcontext::lock_table() {
 					(opened_table_t*) ((char*) node
 							- hash_table_for_opened->offset);
 			tables[j++] = (TABLE*) t->mysql_table;
-		}
-		tb_assert(opened_table_num==j);
+		}tb_assert(opened_table_num==j);
 	}
 
 	lock = tdhs_lock_table(thd, tables, opened_table_num, this->need_write());
@@ -436,8 +441,7 @@ void tdhs_dbcontext::close_table() {
 
 void tdhs_dbcontext::close_cached_table() {
 //	tb_assert(tdhs_cache_table_on==0);
-	tb_assert(opened_table_num==0);
-	tb_assert(lock==NULL);
+	tb_assert(opened_table_num==0);tb_assert(lock==NULL);
 	if (already_cached_table_num > 0) {
 		easy_debug_log("TDHS:close_cached_table [%d]",
 				already_cached_table_num);
@@ -476,8 +480,7 @@ private:
 };
 
 int tdhs_dbcontext::execute(easy_request_t *r) {
-	tdhs_client_wait_t client_wait = { false, false, false, &use_stream_count, {
-			0 } }; //for stream
+	tdhs_client_wait_t client_wait = { false, false, false, this, { 0 } }; //for stream
 	tdhs_packet_t *packet = (tdhs_packet_t*) ((r->ipacket));
 	tdhs_request_t &request = packet->req;
 	retcode = EASY_OK;
@@ -782,9 +785,9 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 					hnd->ha_index_or_rnd_end();
 					return process_ret;
 				}
-				if (process_db_ret
-						!= 0&& process_db_ret != HA_ERR_RECORD_DELETED) {
-				//get some error in process_handler
+				if (process_db_ret != 0
+						&& process_db_ret != HA_ERR_RECORD_DELETED) {
+					//get some error in process_handler
 					r = process_db_ret;
 					break;
 				}
@@ -796,9 +799,9 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 		}
 		hnd->ha_index_or_rnd_end();
 
-		if (r != 0&& r != HA_ERR_RECORD_DELETED && r != HA_ERR_KEY_NOT_FOUND
-		&& r != HA_ERR_END_OF_FILE) {
-		/* failed */
+		if (r != 0 && r != HA_ERR_RECORD_DELETED && r != HA_ERR_KEY_NOT_FOUND
+				&& r != HA_ERR_END_OF_FILE) {
+			/* failed */
 			easy_error_log("TDHS: read index error,code [%d]", r);
 			return tdhs_response_error(response, CLIENT_STATUS_DB_ERROR, r);
 		}
@@ -1026,8 +1029,7 @@ TDHS_INLINE int tdhs_dbcontext::do_batch_with_lock(easy_request_t *req) {
 			}
 		}
 		batch_packet = batch_packet->next;
-	}
-	tb_assert(i<=batch_num);
+	}tb_assert(i<=batch_num);
 	this->lock_table((TABLE**) mysql_tables, i);
 	ret = do_batch(req);
 	if (this->unlock_table(opened_tables, i) != EASY_OK && ret == EASY_OK) {

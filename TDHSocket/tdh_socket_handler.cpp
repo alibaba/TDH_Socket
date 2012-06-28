@@ -1,11 +1,10 @@
 /*
-* Copyright(C) 2011-2012 Alibaba Group Holding Limited
-* 
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License version 2 as
-* published by the Free Software Foundation.
-*/
-
+ * Copyright(C) 2011-2012 Alibaba Group Holding Limited
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
 
 /*
  * tdh_socket_handler.cpp
@@ -74,6 +73,9 @@ int on_server_io_process(easy_request_t *r) {
 				r->ms->c->pool->ref++;
 				cond->client_wait.done_count++;
 				pthread_cond_signal(&cond->client_wait.cond);
+			} else {
+				fatal_abort(
+						"TDHS:OMG! wait client error,it should not be happed!");
 			}
 			pthread_mutex_unlock(&cond->client_wait.mutex);
 		}
@@ -179,8 +181,7 @@ int on_server_process(easy_request_t *r, void *args) {
 			(tdh_socket_connection_context*) ((r->ms->c->user_data));
 	tb_assert(c_context!=NULL);
 	tdhs_dbcontext_i *dbcontext = (tdhs_dbcontext_i*) (args);
-	tb_assert(dbcontext!=NULL);
-	tb_assert(packet->req.status == TDHS_DECODE_DONE);
+	tb_assert(dbcontext!=NULL);tb_assert(packet->req.status == TDHS_DECODE_DONE);
 	if (c_context->get_timeout() > 0) {
 		ullong timeout = c_context->get_timeout() * 1000;
 		ullong start_time = packet->start_time;

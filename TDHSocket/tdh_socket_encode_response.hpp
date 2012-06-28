@@ -19,6 +19,7 @@
 #include "tdh_socket_config.hpp"
 #include "tdh_socket_protocol.hpp"
 #include "tdh_socket_error.hpp"
+#include "tdh_socket_dbcontext.hpp"
 #include "util.hpp"
 #include "debug_util.hpp"
 #include "thread_and_lock.hpp"
@@ -231,9 +232,10 @@ static TDHS_INLINE int send_stream(tdhs_client_wait_t &client_wait,
 		req->args = &client_wait;
 	}
 	packet.command_id_or_response_code = CLIENT_STATUS_ACCEPT;
-	easy_request_wakeup(req);
-	(*client_wait.use_stream_count)++;
+
 	pthread_mutex_lock(&client_wait.client_wait.mutex);
+	easy_request_wakeup(req);
+	((tdhs_dbcontext_i *) client_wait.db_context)->using_stream();
 	client_wait.is_waiting = true;
 	pthread_cond_wait(&client_wait.client_wait.cond,
 			&client_wait.client_wait.mutex);
