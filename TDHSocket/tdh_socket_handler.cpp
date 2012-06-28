@@ -61,6 +61,24 @@ static TDHS_INLINE uint64_t need_redispatch(easy_thread_pool_t *tp,
 	return hv;
 }
 
+static int easy_thread_pool_push_for_limited(easy_thread_pool_t *tp,
+		easy_request_t *r, uint64_t hv, unsigned int limit) {
+	if (limit > 0) {
+		unsigned int task_count;
+		easy_request_thread_t *rth;
+		if (unlikely(hv == 0))
+			hv = easy_hash_key((long) r->ms->c);
+		rth = (easy_request_thread_t *) easy_thread_pool_hash(tp, hv);
+		easy_spin_lock(&rth->thread_lock);
+		task_count = rth->task_list_count;
+		easy_spin_unlock(&rth->thread_lock);
+		if (task_count > limit) {
+			return EASY_BREAK;
+		}
+	}
+	return easy_thread_pool_push(tp, r, hv);
+}
+
 int on_server_io_process(easy_request_t *r) {
 	if (r->retcode == EASY_AGAIN) {
 		tdhs_client_wait_t * cond = (tdhs_client_wait_t *) r->args;
@@ -114,10 +132,16 @@ int on_server_io_process(easy_request_t *r) {
 				CLIENT_STATUS_FORBIDDEN, CLIENT_ERROR_CODE_UNAUTHENTICATION);
 	}
 	if (type == TDHS_QUICK) {
-		easy_thread_pool_push(request_server_tp, r,
+		if (easy_thread_pool_push_for_limited(request_server_tp, r,
 				need_redispatch(request_server_tp, r,
 						table_need_balance(packet->req, type,
-								packet->reserved)));
+								packet->reserved)),
+				tdhs_quick_request_thread_task_count_limit) != EASY_OK) {
+			r->opacket = r->ipacket; //复用packet
+			return tdhs_response_error_global((tdhs_packet_t*) (r->opacket),
+					CLIENT_STATUS_SERVICE_UNAVAILABLE,
+					CLIENT_ERROR_CODE_THROTTLED);
+		}
 	} else if (type == TDHS_SLOW) {
 		//throttle
 		if (thread_strategy == TDHS_THREAD_LV_3 && tdhs_optimize_on
@@ -127,16 +151,28 @@ int on_server_io_process(easy_request_t *r) {
 					CLIENT_STATUS_SERVICE_UNAVAILABLE,
 					CLIENT_ERROR_CODE_THROTTLED);
 		}
-		easy_thread_pool_push(slow_read_request_server_tp, r,
+		if (easy_thread_pool_push_for_limited(slow_read_request_server_tp, r,
 				need_redispatch(slow_read_request_server_tp, r,
 						table_need_balance(packet->req, type,
-								packet->reserved)));
+								packet->reserved)),
+				tdhs_slow_request_thread_task_count_limit) != EASY_OK) {
+			r->opacket = r->ipacket; //复用packet
+			return tdhs_response_error_global((tdhs_packet_t*) (r->opacket),
+					CLIENT_STATUS_SERVICE_UNAVAILABLE,
+					CLIENT_ERROR_CODE_THROTTLED);
+		}
 
 	} else if (type == TDHS_WRITE) {
-		easy_thread_pool_push(write_request_server_tp, r,
+		if (easy_thread_pool_push_for_limited(write_request_server_tp, r,
 				table_need_balance(
 						(packet->next) ? (packet->next->req) : packet->req, //如果时batch的话取第二个真正请求进行balance
-						type, packet->reserved));
+						type, packet->reserved),
+				tdhs_write_request_thread_task_count_limit) != EASY_OK) {
+			r->opacket = r->ipacket; //复用packet
+			return tdhs_response_error_global((tdhs_packet_t*) (r->opacket),
+					CLIENT_STATUS_SERVICE_UNAVAILABLE,
+					CLIENT_ERROR_CODE_THROTTLED);
+		}
 	}
 	return EASY_AGAIN;
 }

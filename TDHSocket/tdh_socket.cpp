@@ -180,7 +180,7 @@ void thds_log_level_update(THD* thd, //in: thread handle
 		void* var_ptr, // out: where the formal string goes
 		const void* save) // in: immediate result from check function
 		{
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 	taobao::tdhs_log_level = *static_cast<const uint*>(save);
 	easy_log_level = (easy_log_level_t) taobao::tdhs_log_level;
 
@@ -192,7 +192,7 @@ void thds_monitor_interval_update(THD* thd, //in: thread handle
 		void* var_ptr, // out: where the formal string goes
 		const void* save) // in: immediate result from check function
 		{
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 	taobao::tdhs_monitor_interval = *static_cast<const uint*>(save);
 }
 
@@ -202,7 +202,7 @@ void tdhs_thread_strategy_requests_lv_1_update(THD* thd, //in: thread handle
 		void* var_ptr, // out: where the formal string goes
 		const void* save) // in: immediate result from check function
 		{
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 	taobao::tdhs_thread_strategy_requests_lv_1 =
 			*static_cast<const uint*>(save);
 }
@@ -213,7 +213,7 @@ void tdhs_thread_strategy_requests_lv_2_update(THD* thd, //in: thread handle
 		void* var_ptr, // out: where the formal string goes
 		const void* save) // in: immediate result from check function
 		{
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 	taobao::tdhs_thread_strategy_requests_lv_2 =
 			*static_cast<const uint*>(save);
 }
@@ -229,7 +229,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_optimize_on = 1;
@@ -244,7 +244,7 @@ void thds_optimize_guess_hot_request_num_update(THD* thd, //in: thread handle
 		void* var_ptr, // out: where the formal string goes
 		const void* save) // in: immediate result from check function
 		{
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 	taobao::tdhs_optimize_guess_hot_request_num =
 			*static_cast<const int*>(save);
 }
@@ -260,7 +260,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_cache_table_on = 1;
@@ -280,7 +280,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_concurrency_insert = 1;
@@ -300,7 +300,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_concurrency_update = 1;
@@ -320,7 +320,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_concurrency_delete = 1;
@@ -340,7 +340,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_auth_on = 1;
@@ -360,7 +360,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	*static_cast<const char**>(var_ptr) =
 			*static_cast<const char* const *>(save);
@@ -378,7 +378,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	*static_cast<const char**>(var_ptr) =
 			*static_cast<const char* const *>(save);
@@ -396,7 +396,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_throttle_on = 1;
@@ -411,8 +411,41 @@ void tdhs_slow_read_limits_update(THD* thd, //in: thread handle
 		void* var_ptr, // out: where the formal string goes
 		const void* save) // in: immediate result from check function
 		{
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 	taobao::tdhs_slow_read_limits = *static_cast<const uint*>(save);
+}
+
+static
+void tdhs_quick_request_thread_task_count_limit_update(THD* thd, //in: thread handle
+		struct st_mysql_sys_var* var, // in: pointer to system variable
+		void* var_ptr, // out: where the formal string goes
+		const void* save) // in: immediate result from check function
+		{
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
+	taobao::tdhs_quick_request_thread_task_count_limit =
+			*static_cast<const uint*>(save);
+}
+
+static
+void tdhs_slow_request_thread_task_count_limit_update(THD* thd, //in: thread handle
+		struct st_mysql_sys_var* var, // in: pointer to system variable
+		void* var_ptr, // out: where the formal string goes
+		const void* save) // in: immediate result from check function
+		{
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
+	taobao::tdhs_slow_request_thread_task_count_limit =
+			*static_cast<const uint*>(save);
+}
+
+static
+void tdhs_write_request_thread_task_count_limit_update(THD* thd, //in: thread handle
+		struct st_mysql_sys_var* var, // in: pointer to system variable
+		void* var_ptr, // out: where the formal string goes
+		const void* save) // in: immediate result from check function
+		{
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
+	taobao::tdhs_write_request_thread_task_count_limit =
+			*static_cast<const uint*>(save);
 }
 
 static
@@ -426,7 +459,7 @@ void* var_ptr, /*!< out: where the
 const void* save) /*!< in: immediate result
  from check function */
 {
-	tb_assert(var_ptr != NULL); tb_assert(save != NULL);
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
 
 	if (*(my_bool*) save) {
 		taobao::tdhs_group_commit = 1;
@@ -545,6 +578,21 @@ static MYSQL_SYSVAR_BOOL(group_commit, taobao::tdhs_group_commit,
 		"switch group commit!",
 		NULL, tdhs_group_commit_update, DEFAULT_TDHS_GROUP_COMMIT);
 
+static MYSQL_SYSVAR_UINT(quick_request_thread_task_count_limit, taobao::tdhs_quick_request_thread_task_count_limit,
+		PLUGIN_VAR_RQCMDARG,
+		"the limit of the quick request thread's max task count , 0 mean unlimited", NULL,
+		tdhs_quick_request_thread_task_count_limit_update, DEFAULT_TDHS_QUICK_REQUEST_THREAD_TASK_COUNT_LIMIT,0, UINT_MAX, 0);
+
+static MYSQL_SYSVAR_UINT(slow_request_thread_task_count_limit, taobao::tdhs_slow_request_thread_task_count_limit,
+		PLUGIN_VAR_RQCMDARG,
+		"the limit of the slow request thread's max task count , 0 mean unlimited", NULL,
+		tdhs_slow_request_thread_task_count_limit_update, DEFAULT_TDHS_SLOW_REQUEST_THREAD_TASK_COUNT_LIMIT,0, UINT_MAX, 0);
+
+static MYSQL_SYSVAR_UINT(write_request_thread_task_count_limit, taobao::tdhs_write_request_thread_task_count_limit,
+		PLUGIN_VAR_RQCMDARG,
+		"the limit of the write request thread's max task count , 0 mean unlimited", NULL,
+		tdhs_write_request_thread_task_count_limit_update, DEFAULT_TDHS_WRITE_REQUEST_THREAD_TASK_COUNT_LIMIT,0, UINT_MAX, 0);
+
 /* warning: type-punning to incomplete type might break strict-aliasing
  * rules */
 static struct st_mysql_sys_var *daemon_tdh_socket_system_variables[] = {
@@ -561,7 +609,10 @@ static struct st_mysql_sys_var *daemon_tdh_socket_system_variables[] = {
 		MYSQL_SYSVAR(concurrency_delete), MYSQL_SYSVAR(auth_on), MYSQL_SYSVAR(
 				auth_read_code), MYSQL_SYSVAR(auth_write_code), MYSQL_SYSVAR(
 				throttle_on), MYSQL_SYSVAR(slow_read_limits), MYSQL_SYSVAR(
-				write_buff_size), MYSQL_SYSVAR(group_commit), 0 };
+				write_buff_size), MYSQL_SYSVAR(group_commit),
+		MYSQL_SYSVAR(quick_request_thread_task_count_limit),
+		MYSQL_SYSVAR(slow_request_thread_task_count_limit),
+		MYSQL_SYSVAR(write_request_thread_task_count_limit), 0 };
 
 static char _optimize_status[1024];
 
@@ -609,11 +660,11 @@ struct st_mysql_daemon tdh_socket_plugin = { MYSQL_DAEMON_INTERFACE_VERSION };
 /*
  Plugin library descriptor
  */mysql_declare_plugin (tdh_socket) { MYSQL_DAEMON_PLUGIN, &tdh_socket_plugin,
-		"tdh_socket", "wentong@taobao.com", "proxy the handler",
-		PLUGIN_LICENSE_GPL, tdh_socket_plugin_init, /* Plugin Init */
-		tdh_socket_plugin_deinit, /* Plugin Deinit */
-		0x0003 /* 0.3 */, daemon_tdh_socket_status_variables, /* status variables                */
-		daemon_tdh_socket_system_variables, /* system variables                */
-		NULL /* config options                  */
+"tdh_socket", "wentong@taobao.com", "proxy the handler",
+PLUGIN_LICENSE_GPL, tdh_socket_plugin_init, /* Plugin Init */
+tdh_socket_plugin_deinit, /* Plugin Deinit */
+0x0003 /* 0.3 */, daemon_tdh_socket_status_variables, /* status variables                */
+daemon_tdh_socket_system_variables, /* system variables                */
+NULL /* config options                  */
 }
 mysql_declare_plugin_end;

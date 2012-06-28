@@ -76,6 +76,12 @@ extern unsigned int tdhs_slow_read_limits;
 //extra
 extern unsigned int tdhs_write_buff_size;
 
+extern unsigned int tdhs_quick_request_thread_task_count_limit;
+
+extern unsigned int tdhs_slow_request_thread_task_count_limit;
+
+extern unsigned int tdhs_write_request_thread_task_count_limit;
+
 } // namespace taobao
 
 #endif /* TDH_SOCKET_CONFIG_HPP_ */

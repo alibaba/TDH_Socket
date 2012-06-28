@@ -1,2 +1,4 @@
+0.3.2 - 2012-06-28
+  * Add request thread task count limit
 0.3.1 - 2012-03-27
   * Initial public release

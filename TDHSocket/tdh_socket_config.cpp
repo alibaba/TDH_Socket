@@ -73,5 +73,11 @@ unsigned int tdhs_slow_read_limits = 2;
 //extra
 unsigned int tdhs_write_buff_size = 8 * 1024;
 
+unsigned int tdhs_quick_request_thread_task_count_limit = 0;
+
+unsigned int tdhs_slow_request_thread_task_count_limit = 0;
+
+unsigned int tdhs_write_request_thread_task_count_limit = 0;
+
 } // namespace taobao
 
