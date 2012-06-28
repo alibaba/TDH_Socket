@@ -2523,7 +2523,7 @@ Index: storage/innobase/include/row0cache.h
 +extern row_cache_stat_t* row_cache_stat;
 +
 +
-+#define calc_fold_by_tuple(tuple , n_fields , tree_id) dtuple_fold((tuple) , (n_fields) , 0 , (tree_id))
++#define calc_fold_by_tuple(tuple , tree_id) dtuple_fold((tuple) , dtuple_get_n_fields((tuple)) , 0 , (tree_id))
 +ulint calc_fold_by_rec(
 +/*=====*/
 +	const rec_t*	rec,		/*!< in: the physical record */
@@ -2566,11 +2566,11 @@ Index: storage/innobase/include/row0cache.h
 +
 +ulint lock_sec_rec_in_row_cache_cons_read_sees(const rec_t*	rec, const ulint* offsets, const read_view_t* view);
 +
-+#define contain_row_cache(tuple , index)   contain_row_cache_low(calc_fold_by_tuple((tuple) , (dict_index_get_n_unique(index)) , (index->id)), (tuple) ,(index))
-+#define get_from_row_cache(tuple , index , mtr)   get_from_row_cache_low(calc_fold_by_tuple((tuple) , (dict_index_get_n_unique(index)) , (index->id)), (tuple) ,(index) ,(mtr) )
++#define contain_row_cache(tuple , index)   contain_row_cache_low(calc_fold_by_tuple((tuple), (index->id)), (tuple) ,(index))
++#define get_from_row_cache(tuple , index , mtr)   get_from_row_cache_low(calc_fold_by_tuple((tuple), (index->id)), (tuple) ,(index) ,(mtr) )
 +#define remove_from_row_cache(rec, offsets, index)  remove_from_row_cache_low(calc_fold_by_rec((rec), (offsets), (dict_index_get_n_unique(index)), (index->id)),(rec),(offsets) ,NULL,index)
 +
-+#define remove_from_row_cache_for_tuple(tuple, index)  remove_from_row_cache_low(calc_fold_by_tuple((tuple) , (dict_index_get_n_unique(index)) , (index->id)) , NULL,NULL,(tuple),(index))
++#define remove_from_row_cache_for_tuple(tuple, index)  remove_from_row_cache_low(calc_fold_by_tuple((tuple) , (index->id)) , NULL,NULL,(tuple),(index))
 +
 +void row_cache_refresh_stats();
 +
