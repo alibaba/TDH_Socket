@@ -362,7 +362,9 @@ void tdhs_dbcontext::lock_table() {
 					(opened_table_t*) ((char*) node
 							- hash_table_for_opened->offset);
 			tables[j++] = (TABLE*) t->mysql_table;
-		}tb_assert(opened_table_num==j);
+		}
+
+		tb_assert(opened_table_num==j);
 	}
 
 	lock = tdhs_lock_table(thd, tables, opened_table_num, this->need_write());
