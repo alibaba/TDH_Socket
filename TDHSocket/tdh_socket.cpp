@@ -569,9 +569,9 @@ static MYSQL_SYSVAR_UINT(slow_read_limits, taobao::tdhs_slow_read_limits,
 		tdhs_slow_read_limits_update, DEFAULT_TDHS_SLOW_READ_LIMITS, 1, UINT_MAX, 0);
 
 static MYSQL_SYSVAR_UINT(write_buff_size, taobao::tdhs_write_buff_size,
-		PLUGIN_VAR_RQCMDARG| PLUGIN_VAR_READONLY,
+		PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
 		"the write buffer size", NULL,
-		NULL, DEFAULT_TDHS_WRITE_BUFF_SIZE, 1*1024, 64*1024, 0);
+		NULL, DEFAULT_TDHS_WRITE_BUFF_SIZE, 1*1024, UINT_MAX, 0);
 
 static MYSQL_SYSVAR_BOOL(group_commit, taobao::tdhs_group_commit,
 		PLUGIN_VAR_NOCMDARG,
