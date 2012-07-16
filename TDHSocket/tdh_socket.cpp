@@ -468,6 +468,17 @@ const void* save) /*!< in: immediate result
 	}
 }
 
+static
+void tdhs_group_commit_limit_update(THD* thd, //in: thread handle
+		struct st_mysql_sys_var* var, // in: pointer to system variable
+		void* var_ptr, // out: where the formal string goes
+		const void* save) // in: immediate result from check function
+		{
+	tb_assert(var_ptr != NULL);tb_assert(save != NULL);
+	taobao::tdhs_group_commit_limits =
+			*static_cast<const int*>(save);
+}
+
 static MYSQL_SYSVAR_INT(listen_port, taobao::tdhs_listen_port, PLUGIN_VAR_RQCMDARG | PLUGIN_VAR_READONLY,
 		"tdh socket listen port", NULL,NULL, DEFAULT_TDHS_LISTEN_PORT, 1024, 65535, 0);
 
@@ -578,6 +589,11 @@ static MYSQL_SYSVAR_BOOL(group_commit, taobao::tdhs_group_commit,
 		"switch group commit!",
 		NULL, tdhs_group_commit_update, DEFAULT_TDHS_GROUP_COMMIT);
 
+static MYSQL_SYSVAR_INT(group_commit_limits, taobao::tdhs_group_commit_limits,
+		PLUGIN_VAR_RQCMDARG,
+		"the limit of the group commit max number , 0 mean unlimited", NULL,
+		tdhs_group_commit_limit_update, DEFAULT_TDHS_GROUP_COMMIT_LIMITS,0, INT_MAX, 0);
+
 static MYSQL_SYSVAR_UINT(quick_request_thread_task_count_limit, taobao::tdhs_quick_request_thread_task_count_limit,
 		PLUGIN_VAR_RQCMDARG,
 		"the limit of the quick request thread's max task count , 0 mean unlimited", NULL,
@@ -610,6 +626,7 @@ static struct st_mysql_sys_var *daemon_tdh_socket_system_variables[] = {
 				auth_read_code), MYSQL_SYSVAR(auth_write_code), MYSQL_SYSVAR(
 				throttle_on), MYSQL_SYSVAR(slow_read_limits), MYSQL_SYSVAR(
 				write_buff_size), MYSQL_SYSVAR(group_commit),
+		MYSQL_SYSVAR(group_commit_limits),
 		MYSQL_SYSVAR(quick_request_thread_task_count_limit),
 		MYSQL_SYSVAR(slow_request_thread_task_count_limit),
 		MYSQL_SYSVAR(write_request_thread_task_count_limit), 0 };

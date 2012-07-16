@@ -35,6 +35,8 @@ extern unsigned int tdhs_cache_table_num_for_thd;
 
 extern char tdhs_group_commit;
 
+extern int tdhs_group_commit_limits;
+
 //optimize
 
 extern char tdhs_optimize_on;

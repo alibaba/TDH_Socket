@@ -222,22 +222,46 @@ static void tdhs_request_on_wakeup(struct ev_loop *loop, ev_async *w,
 
 	th = (easy_request_thread_t *) w->data;
 
-	// 取回list
-	easy_spin_lock(&th->thread_lock);
-	th->task_list_count = 0;
-	easy_list_movelist(&th->task_list, &request_list);
-	easy_list_movelist(&th->session_list, &session_list);
-	easy_spin_unlock(&th->thread_lock);
-
 	tdhs_dbcontext_i *dbcontext = (tdhs_dbcontext_i*) th->args;
 	tb_assert(dbcontext!=NULL);
 	if (tdhs_cache_table_on == 0) {
 		easy_debug_log("TDHS:tdhs_cache_table_on is off,close_cached_table");
 		dbcontext->close_cached_table();
 	}
+
+
 	if (dbcontext->need_write()) {
+		// 取回list
+		int limits = tdhs_group_commit_limits;
+		easy_spin_lock(&th->thread_lock);
+		if (limits > 0 && th->task_list_count > limits) {
+			easy_request_t *r, *r2;
+			easy_list_init(&request_list);
+			th->task_list_count -= limits;
+			easy_list_for_each_entry_safe(r, r2, &th->task_list, request_list_node)
+			{
+				easy_list_del(&r->request_list_node);
+				easy_list_add_tail(&r->request_list_node, &request_list);
+				if (--limits <= 0) {
+					break;
+				}
+			}
+		} else {
+			th->task_list_count = 0;
+			easy_list_movelist(&th->task_list, &request_list);
+		}
+		easy_list_movelist(&th->session_list, &session_list);
+		easy_spin_unlock(&th->thread_lock);
+
 		tdhs_request_doreq_for_write(th, &request_list);
 	} else {
+		// 取回list
+		easy_spin_lock(&th->thread_lock);
+		th->task_list_count = 0;
+		easy_list_movelist(&th->task_list, &request_list);
+		easy_list_movelist(&th->session_list, &session_list);
+		easy_spin_unlock(&th->thread_lock);
+
 		tdhs_request_doreq_for_read(th, &request_list);
 	}
 }

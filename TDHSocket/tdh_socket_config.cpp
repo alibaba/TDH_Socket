@@ -1,11 +1,10 @@
 /*
-* Copyright(C) 2011-2012 Alibaba Group Holding Limited
-* 
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License version 2 as
-* published by the Free Software Foundation.
-*/
-
+ * Copyright(C) 2011-2012 Alibaba Group Holding Limited
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
 
 /*
  * tdh_socket_config.cpp
@@ -33,6 +32,8 @@ char tdhs_cache_table_on = 1;
 unsigned int tdhs_cache_table_num_for_thd = 3;
 
 char tdhs_group_commit = 1;
+
+int tdhs_group_commit_limits = 0;
 
 //optimize
 char tdhs_optimize_on = 0;

@@ -1,5 +1,6 @@
 0.3.3 - 2012-07-13
   * New Hash Code
+  * Add tdhs_group_commit_limits for limit group max number
 0.3.2 - 2012-06-28
   * Add request thread task count limit
 0.3.1 - 2012-03-27
