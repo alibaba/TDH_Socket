@@ -287,7 +287,7 @@ void tdhs_dbcontext::open_table(tdhs_request_t &req) {
 				easy_hash_add(hash_table_for_opened,
 						cached_t.hash_code_for_table > 0 ?
 								cached_t.hash_code_for_table :
-								hash_code_for_table(t->s->db.str,t->s->db.length,t->s->table_name.str,t->s->table_name.length)
+								make_hash_code_for_table(t->s->db.str,t->s->db.length,t->s->table_name.str,t->s->table_name.length)
 								, &opened_t.hash);
 				if (opened_table_num < DBCONTEXT_MAX_CACHE_LOCK_TABLES) {
 					need_lock_tables[opened_table_num++] = t;

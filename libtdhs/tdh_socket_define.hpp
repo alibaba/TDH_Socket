@@ -1,11 +1,10 @@
 /*
-* Copyright(C) 2011-2012 Alibaba Group Holding Limited
-* 
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License version 2 as
-* published by the Free Software Foundation.
-*/
-
+ * Copyright(C) 2011-2012 Alibaba Group Holding Limited
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
 
 /*
  * tdh_socket_define.hpp
@@ -37,6 +36,9 @@ typedef struct tdhs_request_t tdhs_request_t;
 typedef struct tdhs_client_wait_t tdhs_client_wait_t;
 
 static TDHS_INLINE uint64_t fold(uint64_t n1, uint64_t n2);
+
+static TDHS_INLINE uint64_t make_hash_code_for_table(const char* db,
+		size_t db_len, const char* table, size_t table_len);
 
 typedef enum {
 	//read
@@ -78,8 +80,33 @@ static TDHS_INLINE uint64_t fold(uint64_t n1, uint64_t n2) {
 			^ UT_HASH_RANDOM_MASK) + n2);
 }
 
-#define hash_code_for_table(db, db_str_len, table, table_str_len) \
+#define all_hash_code_for_table(db, db_str_len, table, table_str_len) \
 	fold(easy_hash_code((db), (db_str_len), 5), easy_hash_code((table), (table_str_len), 5))
+
+#define is_number(C) ((C)>='0'&&(C)<='9')
+
+static TDHS_INLINE uint64_t make_hash_code_for_table(const char* db,
+		size_t db_len, const char* table, size_t table_len) {
+	size_t i = table_len - 1;
+	//如果table name最后是以数字结尾的话，就以这个数字为hash code
+	if (is_number(table[i])) {
+		for (;;) {
+			if (!is_number(table[i])) {
+				i++;
+				break;
+			} else if (i == 0) {
+				break;
+			} else {
+				i--;
+			}
+		}
+		uint64_t ret = atoll(table + i);
+		ret = (ret == 0 ? ~0 : ret);
+		return ret;
+	} else {
+		return all_hash_code_for_table(db,db_len,table,table_len);
+	}
+}
 
 #define REQUEST_MAX_FIELD_NUM 256
 #define REQUEST_MAX_KEY_NUM 10
@@ -121,7 +148,7 @@ typedef enum {
 	TDHS_UNDECODE = 0, TDHS_DECODE_DONE, TDHS_DECODE_FAILED
 } tdhs_decode_status_t;
 
-struct tdhs_request_table_t{
+struct tdhs_request_table_t {
 	uint32_t field_num;
 	tdhs_string_t db;
 	tdhs_string_t table;
@@ -132,8 +159,7 @@ struct tdhs_request_table_t{
 	TDHS_INLINE
 	void print_log() const {
 		if (easy_log_level >= EASY_LOG_DEBUG) {
-			easy_debug_log(
-					"TDHS:db:[%s] table:[%s] index:[%s] field_num:[%d]",
+			easy_debug_log( "TDHS:db:[%s] table:[%s] index:[%s] field_num:[%d]",
 					db.str_print(), table.str_print(), index.str_print(), field_num);
 			for (uint32_t i = 0; i < field_num; i++) {
 				easy_debug_log("TDHS:    field[%d]:[%s]",
@@ -156,8 +182,8 @@ struct tdhs_request_table_t{
 	TDHS_INLINE
 	uint64_t hash_code_table() const {
 		if (hash_code_for_table == 0) {
-			hash_code_for_table =
-					hash_code_for_table(db.str, db.strlen(), table.str, table.strlen());
+			hash_code_for_table = make_hash_code_for_table(db.str, db.strlen(),
+					table.str, table.strlen());
 		}
 		return hash_code_for_table;
 	}
@@ -173,7 +199,7 @@ typedef enum {
 	TDHS_FILTER_END
 } tdhs_filter_flag_t;
 
-struct tdhs_filter_t{
+struct tdhs_filter_t {
 	uint32_t filter_num;
 	tdhs_string_t field[REQUEST_MAX_FIELD_NUM];
 	size_t field_idx[REQUEST_MAX_FIELD_NUM]; //for execute
@@ -213,12 +239,12 @@ typedef enum {
 	TDHS_READ_END
 } tdhs_find_flag_t;
 
-struct tdhs_get_key_t{
+struct tdhs_get_key_t {
 	uint32_t key_field_num;
 	tdhs_string_t key[REQUEST_MAX_KEY_NUM];
 };
 
-struct tdhs_request_get_t{
+struct tdhs_request_get_t {
 	uint32_t key_num;
 	tdhs_get_key_t keys[REQUEST_MAX_KEY_NUM];
 	tdhs_find_flag_t find_flag;
@@ -269,7 +295,7 @@ typedef enum {
 	TDHS_UPDATE_END
 } tdhs_update_flag_t;
 
-struct tdhs_request_values_t{
+struct tdhs_request_values_t {
 	uint32_t value_num;
 	tdhs_update_flag_t flag[REQUEST_MAX_FIELD_NUM];
 	tdhs_string_t value[REQUEST_MAX_FIELD_NUM];
@@ -296,7 +322,7 @@ struct tdhs_request_values_t{
 	}
 };
 
-struct tdhs_request_insert_t{
+struct tdhs_request_insert_t {
 	uint32_t value_num;
 	tdhs_string_t value[REQUEST_MAX_FIELD_NUM];
 
@@ -312,13 +338,13 @@ struct tdhs_request_insert_t{
 	}
 };
 
-struct opened_table_t{
+struct opened_table_t {
 	void* mysql_table;
 	bool modified; //MARK 有记录更新时 需设为true以便更新qurey cache
 	easy_hash_list_t hash;
 };
 
-struct tdhs_request_t{
+struct tdhs_request_t {
 	tdhs_decode_status_t status;
 	tdhs_request_type_t type;
 	tdhs_request_table_t table_info;
@@ -332,7 +358,7 @@ typedef enum {
 	TDHS_QUICK, TDHS_SLOW, TDHS_WRITE
 } tdhs_optimize_t;
 
-struct tdhs_client_wait_t{
+struct tdhs_client_wait_t {
 	bool is_inited;
 	bool is_waiting;
 	bool is_closed;
