@@ -7,7 +7,11 @@ if [ "$1" == "clean" ]; then
     exit;
 fi
 
-libtoolize --force
+if [ -x "/usr/bin/libtoolize" ]; then 
+    libtoolize --force
+else
+    glibtoolize --force
+fi
 aclocal
 autoconf
 automake --add-missing --force

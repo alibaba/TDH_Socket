@@ -9,6 +9,9 @@ AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PREFIX_DEFAULT(/usr)
 
+m4_pattern_allow([AM_PROG_AR])
+AM_PROG_AR
+
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_CPP
