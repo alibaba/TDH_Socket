@@ -110,6 +110,7 @@ static TDHS_INLINE uint64_t make_hash_code_for_table(const char* db,
 
 #define REQUEST_MAX_FIELD_NUM 256
 #define REQUEST_MAX_KEY_NUM 10
+#define REQUEST_MAX_IN_NUM REQUEST_MAX_KEY_NUM
 
 struct tdhs_string_t {
 	const char *str; //C字符串 必须包含'\0'
@@ -246,7 +247,8 @@ struct tdhs_get_key_t {
 
 struct tdhs_request_get_t {
 	uint32_t key_num;
-	tdhs_get_key_t keys[REQUEST_MAX_KEY_NUM];
+	tdhs_get_key_t *keys;
+	tdhs_get_key_t r_keys[REQUEST_MAX_IN_NUM];
 	tdhs_find_flag_t find_flag;
 	tdhs_filter_t filter;
 	uint32_t start;

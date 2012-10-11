@@ -49,10 +49,14 @@ int tdh_socket_connection_context::destory() {
 
 int tdh_socket_connection_context::decode(tdhs_packet_t* request) {
 	tb_assert(decode_request!=NULL);
-	if (decode_request(request->req, *request)) {
+	int state = decode_request(request->req, *request);
+	if (state) {
 		easy_warn_log("TDHS: decode failed!");
 		request->req.status = TDHS_DECODE_FAILED;
-		return EASY_ERROR;
+		if(state == ERROR_OUT_OF_IN)
+			return ERROR_OUT_OF_IN;
+		else
+			return EASY_ERROR;
 	}
 	request->req.status = TDHS_DECODE_DONE;
 	return EASY_OK;

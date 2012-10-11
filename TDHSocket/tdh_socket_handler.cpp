@@ -116,11 +116,18 @@ int on_server_io_process(easy_request_t *r) {
 		return ret;
 	}
 	//进行具体的decode request
-	if (c_context->decode(packet) != EASY_OK) {
+	int decode_ret = c_context->decode(packet);
+	if (decode_ret != EASY_OK) {
 		r->opacket = r->ipacket; //复用packet
-		return tdhs_response_error_global((tdhs_packet_t*) (r->opacket),
-				CLIENT_STATUS_BAD_REQUEST,
-				CLIENT_ERROR_CODE_DECODE_REQUEST_FAILED);
+		if (decode_ret == ERROR_OUT_OF_IN) {
+			return tdhs_response_error_global((tdhs_packet_t*) (r->opacket),
+					CLIENT_STATUS_SERVER_ERROR,
+					CLIENT_ERROR_CODE_NOT_ENOUGH_MEMORY);
+		} else {
+			return tdhs_response_error_global((tdhs_packet_t*) (r->opacket),
+					CLIENT_STATUS_BAD_REQUEST,
+					CLIENT_ERROR_CODE_DECODE_REQUEST_FAILED);
+		}
 	}
 	easy_debug_log("TDHS:decode done");
 	tdhs_optimize_t type = optimize(packet->req);

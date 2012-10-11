@@ -12,7 +12,7 @@
  *  Created on: 2011-11-21
  *      Author: wentong
  */
-#include "tdh_socket_decode_request_binary.hpp"
+#include "tdh_socket_decode_request_binary_v2.hpp"
 #include  <arpa/inet.h>
 
 namespace taobao {
@@ -32,7 +32,7 @@ static TDHS_INLINE int decode_to_insert(tdhs_request_t & req,
 static TDHS_INLINE int decode_to_batch(tdhs_request_t & req,
 		tdhs_packet_t& packet);
 
-int decode_request_by_binary(tdhs_request_t &req, tdhs_packet_t& packet) {
+int decode_request_by_binary_v2(tdhs_request_t &req, tdhs_packet_t& packet) {
 	easy_info_log("TDHS:use binary to decode request");
 	req.type = (tdhs_request_type_t) packet.command_id_or_response_code;
 	switch (req.type) {
@@ -135,16 +135,28 @@ static TDHS_INLINE int _decode_to_filter(tdhs_filter_t& filter,
 	return EASY_OK;
 }
 
-static TDHS_INLINE int _decode_to_get(tdhs_request_t & req, uint32_t &read_len,
-		char* &pos) {
+static TDHS_INLINE int _decode_to_get(tdhs_request_t & req,
+		tdhs_packet_t& packet, uint32_t &read_len, char* &pos) {
+	bool outOfIn = false;
+	uint32_t in_limit = REQUEST_MAX_IN_NUM;
 	if (_decode_to_table_info(req.table_info, read_len, pos, true) != EASY_OK) {
 		return EASY_ERROR;
 	}
 	//read key
 	read_uint32_ref(req.get.key_num, pos, read_len);
-	req.get.keys = req.get.r_keys;
+	if (req.get.key_num <= REQUEST_MAX_IN_NUM) {
+		req.get.keys = req.get.r_keys;
+	} else {
+		req.get.keys = (tdhs_get_key_t*) easy_pool_calloc(packet.pool,
+				sizeof(tdhs_get_key_t) * req.get.key_num);
+		if (req.get.keys == NULL) {
+			req.get.keys = req.get.r_keys;
+		}else{
+			in_limit = req.get.key_num;
+		}
+	}
 	for (uint32_t i = 0; i < req.get.key_num; i++) {
-		if (i < REQUEST_MAX_KEY_NUM) {
+		if (i < in_limit) {
 			tdhs_get_key_t& one_key = req.get.keys[i];
 			read_uint32_ref(one_key.key_field_num, pos, read_len);
 			for (uint32_t j = 0; j < one_key.key_field_num; j++) {
@@ -153,6 +165,7 @@ static TDHS_INLINE int _decode_to_get(tdhs_request_t & req, uint32_t &read_len,
 				read_str_ref(key.str, pos, read_len, key.len);
 			}
 		} else {
+			outOfIn = true;
 			//skip too many field
 			tdhs_get_key_t temp_key;
 			read_uint32_ref(temp_key.key_field_num, pos, read_len);
@@ -171,6 +184,12 @@ static TDHS_INLINE int _decode_to_get(tdhs_request_t & req, uint32_t &read_len,
 	//read start and limit
 	read_uint32_ref(req.get.start, pos, read_len);
 	read_uint32_ref(req.get.limit, pos, read_len);
+
+	if(outOfIn && req.get.find_flag == TDHS_IN){
+		easy_warn_log("TDHS:too many in condition!");
+		return ERROR_OUT_OF_IN;
+	}
+
 	if (req.get.is_vaild() != EASY_OK) { //get 信息读完..先判断是否有效
 		return EASY_ERROR;
 	}
@@ -186,7 +205,7 @@ static TDHS_INLINE int decode_to_get(tdhs_request_t & req,
 		tdhs_packet_t& packet) {
 	uint32_t read_len = packet.length;
 	char* pos = packet.rdata;
-	if (_decode_to_get(req, read_len, pos) != EASY_OK) {
+	if (_decode_to_get(req, packet, read_len, pos) != EASY_OK) {
 		return EASY_ERROR;
 	}
 	if (read_len != 0) {
@@ -201,7 +220,7 @@ static TDHS_INLINE int decode_to_update(tdhs_request_t & req,
 	uint8_t tmp8 = 0;
 	uint32_t read_len = packet.length;
 	char* pos = packet.rdata;
-	if (_decode_to_get(req, read_len, pos) != EASY_OK) {
+	if (_decode_to_get(req, packet, read_len, pos) != EASY_OK) {
 		return EASY_ERROR;
 	}
 	//read value
@@ -238,6 +257,8 @@ static TDHS_INLINE int decode_to_update(tdhs_request_t & req,
 
 static TDHS_INLINE int decode_to_delete_or_count(tdhs_request_t & req,
 		tdhs_packet_t& packet) {
+	uint32_t in_limit = REQUEST_MAX_IN_NUM;
+	bool outOfIn = false;
 	uint32_t read_len = packet.length;
 	char* pos = packet.rdata;
 	if (_decode_to_table_info(req.table_info, read_len, pos, false) != EASY_OK) {
@@ -245,9 +266,19 @@ static TDHS_INLINE int decode_to_delete_or_count(tdhs_request_t & req,
 	}
 	//read key
 	read_uint32_ref(req.get.key_num, pos, read_len);
-	req.get.keys = req.get.r_keys;
+	if (req.get.key_num <= REQUEST_MAX_IN_NUM) {
+		req.get.keys = req.get.r_keys;
+	} else {
+		req.get.keys = (tdhs_get_key_t*) easy_pool_calloc(packet.pool,
+				sizeof(tdhs_get_key_t) * req.get.key_num);
+		if (req.get.keys == NULL) {
+			req.get.keys = req.get.r_keys;
+		}else{
+			in_limit = req.get.key_num;
+		}
+	}
 	for (uint32_t i = 0; i < req.get.key_num; i++) {
-		if (i < REQUEST_MAX_KEY_NUM) {
+		if (i < REQUEST_MAX_IN_NUM) {
 			tdhs_get_key_t& one_key = req.get.keys[i];
 			read_uint32_ref(one_key.key_field_num, pos, read_len);
 			for (uint32_t j = 0; j < one_key.key_field_num; j++) {
@@ -256,6 +287,7 @@ static TDHS_INLINE int decode_to_delete_or_count(tdhs_request_t & req,
 				read_str_ref(key.str, pos, read_len, key.len);
 			}
 		} else {
+			outOfIn = true;
 			//skip too many field
 			tdhs_get_key_t temp_key;
 			read_uint32_ref(temp_key.key_field_num, pos, read_len);
@@ -274,6 +306,12 @@ static TDHS_INLINE int decode_to_delete_or_count(tdhs_request_t & req,
 	//read start and limit
 	read_uint32_ref(req.get.start, pos, read_len);
 	read_uint32_ref(req.get.limit, pos, read_len);
+
+	if(outOfIn && req.get.find_flag == TDHS_IN){
+		easy_warn_log("TDHS:too many in condition!");
+	    return ERROR_OUT_OF_IN;
+	}
+
 	if (req.get.is_vaild() != EASY_OK) { //get 信息读完..先判断是否有效
 		return EASY_ERROR;
 	}
@@ -333,7 +371,7 @@ static TDHS_INLINE int decode_to_batch(tdhs_request_t & req,
 		tdhs_packet_t& packet) {
 	tdhs_packet_t *batch_packet = packet.next;
 	while (batch_packet) {
-		if (decode_request_by_binary(batch_packet->req,
+		if (decode_request_by_binary_v2(batch_packet->req,
 				*batch_packet) != EASY_OK) {
 			return EASY_ERROR;
 		}

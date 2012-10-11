@@ -21,6 +21,7 @@
 #include "tdh_socket_dbcontext.hpp"
 #include "tdh_socket_connection_context.hpp"
 #include "tdh_socket_decode_request_binary.hpp"
+#include "tdh_socket_decode_request_binary_v2.hpp"
 #include "tdh_socket_share.hpp"
 #include "tdh_socket_encode_response.hpp"
 #include "tdh_socket_error.hpp"
@@ -45,7 +46,7 @@ namespace taobao {
 const char* PRIMARY = PRIMARY_STRING;
 
 decode_request_t* decode_request_array[TDHS_PROTOCOL_END] = { NULL,
-		decode_request_by_binary };
+		decode_request_by_binary ,decode_request_by_binary_v2};
 
 typedef int (create_response_handler_t)(tdhs_table_t& tdhs_table,
 		easy_request_t *req);
