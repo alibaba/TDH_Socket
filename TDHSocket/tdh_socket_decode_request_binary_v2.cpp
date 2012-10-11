@@ -278,7 +278,7 @@ static TDHS_INLINE int decode_to_delete_or_count(tdhs_request_t & req,
 		}
 	}
 	for (uint32_t i = 0; i < req.get.key_num; i++) {
-		if (i < REQUEST_MAX_IN_NUM) {
+		if (i < in_limit) {
 			tdhs_get_key_t& one_key = req.get.keys[i];
 			read_uint32_ref(one_key.key_field_num, pos, read_len);
 			for (uint32_t j = 0; j < one_key.key_field_num; j++) {
