@@ -635,6 +635,10 @@ static char _optimize_status[1024];
 
 static char *optimize_status = _optimize_status;
 
+static char _io_status[1024];
+
+static char *io_status = _io_status;
+
 static SHOW_VAR hs_status_variables[] = { { "table_open",
 		(char*) &taobao::open_tables_count, SHOW_LONGLONG }, //
 		{ "table_close", (char*) &taobao::close_tables_count, SHOW_LONGLONG }, //
@@ -661,10 +665,39 @@ static SHOW_VAR hs_status_variables[] = { { "table_open",
 		{ "throttle_count", (char*) &taobao::throttle_count, SHOW_LONGLONG }, //
 		{ "slow_read_done_count", (char*) &taobao::slow_read_io_num,
 				SHOW_LONGLONG }, //
+        { "io_status", (char*) &io_status, SHOW_CHAR_PTR }, //
 		{ NullS, NullS, SHOW_LONG } };
+
+
+static void show_io_status(char* status, const size_t n) {
+    easy_io_thread_t        *ioth;
+    easy_thread_pool_t      *tp;
+    int len = 0;
+    memset(status, 0, n);
+
+
+    len += snprintf(status + len, n - len, "[");
+    tp=easy_io_var.io_thread_pool;
+
+    easy_thread_pool_for_each(ioth, tp, 0) {
+        int conn_count=0;
+        easy_connection_t       *c, *c1;
+        easy_spin_lock(&ioth->thread_lock);
+        easy_list_for_each_entry_safe(c, c1, &ioth->connected_list, conn_list_node) {
+            conn_count++;
+        }
+        easy_spin_unlock(&ioth->thread_lock);
+        len += snprintf(status + len, n - len, "%d,",conn_count);
+
+    }
+    len--; //除去最后一个逗号
+    snprintf(status + len, n - len, "]");
+
+}
 
 static int show_tdhs_vars(THD *thd, SHOW_VAR *var, char *buff) {
 	taobao::show_optimize_status(_optimize_status, sizeof(_optimize_status));
+    show_io_status(_io_status,sizeof(_io_status));
 	var->type = SHOW_ARRAY;
 	var->value = (char *) &hs_status_variables;
 	return 0;
