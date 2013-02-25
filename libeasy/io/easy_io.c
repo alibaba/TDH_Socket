@@ -72,7 +72,7 @@ easy_io_t *easy_eio_create(easy_io_t *eio, int io_thread_count)
 
     eio->io_thread_pool = tp;
     eio->tcp_nodelay = 1;
-    eio->affinity_enable = 0;
+    eio->affinity_enable = 1;
 
     // 初始化线程池
     easy_thread_pool_for_each(ioth, tp, 0) {
