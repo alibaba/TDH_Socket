@@ -28,6 +28,7 @@ CXXFLAGS="$PRESET_CXXFLAGS -D_GNU_SOURCE -D__STDC_LIMIT_MACROS"
 CXXFLAGS="$CXXFLAGS -Wall -fno-rtti -fno-exceptions -fPIC -DPIC" 
 
 AC_CHECK_LIB([pthread], [main])
+AC_CHECK_LIB([tcmalloc], [main])
 
 EASY_INCLUDES="-I`pwd`/libeasy/include/ -I`pwd`/libeasy/memory -I`pwd`/libeasy/util/"
 EASY_INCLUDES="$EASY_INCLUDES -I`pwd`/libeasy/thread/ -I`pwd`/libeasy/io/ -I`pwd`/libeasy/packet/ -I`pwd`/libeasy/packet/http -I."
