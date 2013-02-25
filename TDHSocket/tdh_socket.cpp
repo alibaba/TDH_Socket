@@ -102,7 +102,7 @@ static int tdh_socket_plugin_init(void *p) {
 		easy_error_log("TDHS:easy_thread_pool_create_for_handler error.\n");
 		DBUG_RETURN(1);
 	}
-
+    easy_io_var.no_redispatch = 1;
 	memset(&io_handler, 0, sizeof(io_handler));
 	io_handler.decode = taobao::tdhs_decode;
 	io_handler.encode = taobao::tdhs_encode;
