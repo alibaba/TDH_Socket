@@ -128,6 +128,7 @@ void*tdhs_decode(easy_message_t *m) {
 
         batch_packet->wbuff=0;
         batch_packet->stream_buffer=0;
+        batch_packet->next=0;
         memset(&batch_packet->req,0,sizeof(tdhs_request_t));
 
 		(batch_packet - 1)->next = batch_packet; //形成链
