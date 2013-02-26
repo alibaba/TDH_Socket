@@ -99,6 +99,8 @@ private:
 	int do_batch(easy_request_t *req);
 	int do_batch_with_lock(easy_request_t *req);
 
+    void set_process_info(uint32_t id ,easy_request_t *req);
+
 private:
 	tdhs_optimize_t type;
 	easy_pool_t* pool;
@@ -122,6 +124,8 @@ private:
 	unsigned int last_opened_table_num;
 	TABLE* need_lock_tables[DBCONTEXT_MAX_CACHE_LOCK_TABLES];
 	TABLE* current_table;
+
+    char process_info[MAX_INFO_SIZE];
 };
 
 tdhs_dbcontext::tdhs_dbcontext() :
@@ -257,6 +261,13 @@ void tdhs_dbcontext::set_thd_info(unsigned int bulk_request_num) {
 void tdhs_dbcontext::using_stream() {
 	thd_proc_info(thd, info);
 	set_thread_message(info, "TDHS:send stream[%lu]", ++use_stream_count);
+}
+
+void tdhs_dbcontext::set_process_info(uint32_t id ,easy_request_t *req){
+    char buffer[32];
+    int len = snprintf(process_info, sizeof(process_info), "from:[%s] id:[%d]",
+             easy_inet_addr_to_str(&req->ms->c->addr, buffer, 32) ,id);
+    thd->set_query(process_info, len);
 }
 
 void tdhs_dbcontext::set_group_commit(bool gc) {
@@ -485,6 +496,7 @@ private:
 int tdhs_dbcontext::execute(easy_request_t *r) {
 	tdhs_client_wait_t client_wait = { false, false, false, this, { 0 } }; //for stream
 	tdhs_packet_t *packet = (tdhs_packet_t*) ((r->ipacket));
+    uint32_t seq_id = packet->seq_id;
 	tdhs_request_t &request = packet->req;
 	retcode = EASY_OK;
 	if (thd->killed != THD::NOT_KILLED) {
@@ -492,6 +504,7 @@ int tdhs_dbcontext::execute(easy_request_t *r) {
 		thd->killed = THD::NOT_KILLED;
 	}
 	thd->clear_error();
+    set_process_info(seq_id, r);
 	int ret;
 	switch (request.type) {
 	case REQUEST_TYPE_GET:
@@ -558,6 +571,7 @@ int tdhs_dbcontext::execute(easy_request_t *r) {
 		easy_info_log("[%d] need switch to NO_KILLED at end!", thd->killed);
 		thd->killed = THD::NOT_KILLED;
 	}
+    thd->reset_query();
 	return retcode != EASY_OK ? retcode : ret;
 }
 
