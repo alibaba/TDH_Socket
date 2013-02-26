@@ -74,7 +74,7 @@ void*tdhs_decode(easy_message_t *m) {
 	}
 
 	// alloc packet
-    if ((packet = (tdhs_packet_t *) easy_pool_alloc(m->pool,
+	if ((packet = (tdhs_packet_t *) easy_pool_calloc(m->pool,
 			sizeof(tdhs_packet_t) * (1 + batch_request_num))) == NULL) {
 		m->status = EASY_ERROR;
 		return NULL;
@@ -89,11 +89,6 @@ void*tdhs_decode(easy_message_t *m) {
 	packet->rdata = (char *) m->input->pos;
 	packet->pool = m->pool; //此处设置使用message的pool
 	packet->start_time = now;
-
-    packet->wbuff=0;
-    packet->stream_buffer=0;
-    packet->next=0;
-    memset(&packet->req,0,sizeof(tdhs_request_t));
 	//处理batch请求
 	pos = packet->rdata;
 	left_length = packet->length;
@@ -125,12 +120,6 @@ void*tdhs_decode(easy_message_t *m) {
 		batch_packet->rdata = pos;
 		batch_packet->pool = m->pool; //此处设置使用message的pool
 		batch_packet->start_time = now;
-
-        batch_packet->wbuff=0;
-        batch_packet->stream_buffer=0;
-        batch_packet->next=0;
-        memset(&batch_packet->req,0,sizeof(tdhs_request_t));
-
 		(batch_packet - 1)->next = batch_packet; //形成链
 		pos += datalen;
 		left_length -= datalen;
