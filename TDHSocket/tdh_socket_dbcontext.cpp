@@ -454,14 +454,12 @@ void tdhs_dbcontext::close_table() {
 }
 
 void tdhs_dbcontext::close_cached_table() {
-//	tb_assert(tdhs_cache_table_on==0);
-	tb_assert(opened_table_num==0);tb_assert(lock==NULL);
-	if (already_cached_table_num > 0) {
-		easy_debug_log("TDHS:close_cached_table [%d]",
-				already_cached_table_num);
-		tdhs_close_table(thd);
-		already_cached_table_num = 0;
-	}
+    //	tb_assert(tdhs_cache_table_on==0);
+    tb_assert(opened_table_num==0);tb_assert(lock==NULL);
+    easy_debug_log("TDHS:close_cached_table [%d]",
+                   already_cached_table_num);
+    tdhs_close_table(thd);
+    already_cached_table_num = 0;
 }
 
 class table_locker_for_context: private noncopyable {
