@@ -623,6 +623,7 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 		find_flag = HA_READ_KEY_EXACT;
 		break;
 	case TDHS_GE:
+    case TDHS_BETWEEN:
 		find_flag = HA_READ_KEY_OR_NEXT;
 		break;
 	case TDHS_LE:
@@ -665,9 +666,15 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 	}
 	//filter init end
 	{
+        key_range between_start_key;
+        key_range between_end_key;
+
 		KEY& kinfo = tdhs_table.table->key_info[tdhs_table.idxnum];
 		stack_liker _key_buf_stack(kinfo.key_length);
+        stack_liker _key_buf_stack_for_between_end(kinfo.key_length);
+
 		uchar * const key_buf = (uchar *) _key_buf_stack.get_ptr();
+        uchar * const key_buf_for_between_end = (uchar *) _key_buf_stack_for_between_end.get_ptr();
 		if (key_buf == NULL) {
 			return tdhs_response_error(response, CLIENT_STATUS_SERVER_ERROR,
 					CLIENT_ERROR_CODE_NOT_ENOUGH_MEMORY);
@@ -693,6 +700,38 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 		size_t key_len_sum = prepare_keybuf(request.get.keys[in_index].key,
 				request.get.keys[in_index].key_field_num, key_buf,
 				tdhs_table.table, kinfo);
+
+        if(request.get.find_flag==TDHS_BETWEEN){
+           between_start_key.key = key_buf;
+           between_start_key.length = key_len_sum;
+           between_start_key.keypart_map = (1U
+                                            << request.get.keys[in_index].key_field_num) - 1;
+           between_start_key.flag = find_flag;
+
+           if (key_buf_for_between_end == NULL) {
+               return tdhs_response_error(response, CLIENT_STATUS_SERVER_ERROR,
+                       CLIENT_ERROR_CODE_NOT_ENOUGH_MEMORY);
+           }
+
+           //默认取第二个key 作为范围查询的结束key
+           if ((ret = parse_index(tdhs_table, request.get.keys[1].key,
+                   request.get.keys[1].key_field_num))
+                   != TDHS_PARSE_INDEX_DONE) {
+               return tdhs_response_error(response, CLIENT_STATUS_NOT_FOUND,
+                       static_cast<tdhs_client_error_code_t>(ret));
+           }
+
+           size_t key_len_sum_for_between_end = prepare_keybuf(request.get.keys[1].key,
+                   request.get.keys[1].key_field_num, key_buf_for_between_end,
+                   tdhs_table.table, kinfo);
+
+           between_end_key.key = key_buf_for_between_end;
+           between_end_key.length = key_len_sum_for_between_end;
+           between_end_key.keypart_map = (1U
+                                            << request.get.keys[1].key_field_num) - 1;
+           between_end_key.flag = HA_READ_KEY_EXACT; //确保最后为<=
+
+        }
 
 		/* handler */
 		tdhs_table.table->read_set = &tdhs_table.table->s->all_set;
@@ -722,7 +761,11 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 				if (request.get.find_flag == TDHS_DEQ) {
 					r = hnd->index_read_last_map(tdhs_table.table->record[0],
 							key_buf, kpm);
-				} else {
+                }else if(request.get.find_flag==TDHS_BETWEEN){
+                    r = hnd->read_range_first(&between_start_key,
+                                              &between_end_key,
+                                              0, 1);
+                }else {
 					r = hnd->index_read_map(tdhs_table.table->record[0],
 							key_buf, kpm, find_flag);
 				}
@@ -734,7 +777,11 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 					break;
 				case HA_READ_AFTER_KEY:
 				case HA_READ_KEY_OR_NEXT:
-					r = hnd->index_next(tdhs_table.table->record[0]);
+                    if(request.get.find_flag==TDHS_BETWEEN){
+                        r = hnd->read_range_next();
+                    }else{
+                        r = hnd->index_next(tdhs_table.table->record[0]);
+                    }
 					break;
 				case HA_READ_KEY_EXACT:
 					if (request.get.find_flag == TDHS_DEQ) {

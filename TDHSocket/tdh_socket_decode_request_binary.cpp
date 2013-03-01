@@ -171,6 +171,12 @@ static TDHS_INLINE int _decode_to_get(tdhs_request_t & req, uint32_t &read_len,
 	//read start and limit
 	read_uint32_ref(req.get.start, pos, read_len);
 	read_uint32_ref(req.get.limit, pos, read_len);
+
+    if(req.get.key_num<2 && req.get.find_flag == TDHS_BETWEEN){
+        easy_warn_log("TDHS:too few keys where flag is between condition!");
+        return ERROR_OUT_OF_IN;
+    }
+
 	if (req.get.is_vaild() != EASY_OK) { //get 信息读完..先判断是否有效
 		return EASY_ERROR;
 	}
@@ -274,6 +280,12 @@ static TDHS_INLINE int decode_to_delete_or_count(tdhs_request_t & req,
 	//read start and limit
 	read_uint32_ref(req.get.start, pos, read_len);
 	read_uint32_ref(req.get.limit, pos, read_len);
+
+    if(req.get.key_num<2 && req.get.find_flag == TDHS_BETWEEN){
+        easy_warn_log("TDHS:too few keys where flag is between condition!");
+        return ERROR_OUT_OF_IN;
+    }
+
 	if (req.get.is_vaild() != EASY_OK) { //get 信息读完..先判断是否有效
 		return EASY_ERROR;
 	}

@@ -713,7 +713,7 @@ struct st_mysql_daemon tdh_socket_plugin = { MYSQL_DAEMON_INTERFACE_VERSION };
 "tdh_socket", "wentong@taobao.com", "proxy the handler",
 PLUGIN_LICENSE_GPL, tdh_socket_plugin_init, /* Plugin Init */
 tdh_socket_plugin_deinit, /* Plugin Deinit */
-0x0003 /* 0.3 */, daemon_tdh_socket_status_variables, /* status variables                */
+0x0005 /* 0.5 */, daemon_tdh_socket_status_variables, /* status variables                */
 daemon_tdh_socket_system_variables, /* system variables                */
 NULL /* config options                  */
 }
