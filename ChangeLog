@@ -1,3 +1,7 @@
+0.5   - 2013-03-01
+  * Balance io thread
+  * Support TC Malloc
+  * Support between
 0.3.3 - 2012-07-13
   * New Hash Code
   * Add tdhs_group_commit_limits for limit group max number

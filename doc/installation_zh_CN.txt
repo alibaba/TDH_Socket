@@ -23,18 +23,21 @@
       d) $ sudo make install
       
 2.TDH_Socket的使用
+用root账户登陆到mysql中执行 
+
+    mysql> install plugin tdh_socket soname 'tdhsocket.so';
+    以激活TDH_Socket
+    可以通过
+    mysql> show processlist;
+    看到TDH_Socket的线程在工作了
+
     在my.cnf中添加
     [mysqld]
     #指定TDH_Socket的监听端口号
     tdh_socket_listen_port = 8888 
     #其他配置项见variable文件的描述
     
-    用root账户登陆到mysql中执行 
-    mysql> install plugin tdh_socket soname 'tdhsocket.so';
-    以激活TDH_Socket
-    可以通过
-    mysql> show processlist;
-    看到TDH_Socket的线程在工作了
+    
     
 3.TDH_Socket的客户端
    目前在项目中包含了Java客户端和Python客户端
