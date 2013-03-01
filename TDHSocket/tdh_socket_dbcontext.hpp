@@ -55,6 +55,9 @@ public:
 	virtual void using_stream() = 0;
 	virtual void set_group_commit(bool gc) = 0;
 	virtual time_t* get_thd_time() = 0;
+
+    virtual bool need_close_table() = 0;
+    virtual void set_need_close_table(bool need) = 0;
 #ifdef TDHS_ROW_CACHE
 	virtual bool is_in_cache(tdhs_request_t &req) = 0;
 #endif

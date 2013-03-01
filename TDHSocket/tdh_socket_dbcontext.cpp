@@ -85,6 +85,9 @@ public:
 	virtual void using_stream();
 	virtual void set_group_commit(bool gc);
 	virtual time_t* get_thd_time();
+
+    virtual bool need_close_table();
+    virtual void set_need_close_table(bool need);
 #ifdef TDHS_ROW_CACHE
 	virtual bool is_in_cache(tdhs_request_t &req);
 #endif
@@ -126,13 +129,14 @@ private:
 	TABLE* current_table;
 
     char process_info[MAX_INFO_SIZE];
+    bool need_close_cached_table;
 };
 
 tdhs_dbcontext::tdhs_dbcontext() :
-		write_error(0), use_stream_count(0), bulk(true), in_batch(false), retcode(
-				EASY_OK), cache_table_num(tdhs_cache_table_num_for_thd), already_cached_table_num(
-				0), opened_table_num(0), last_opened_table_num(0), current_table(
-				NULL) {
+        write_error(0), use_stream_count(0), bulk(true), in_batch(false),
+        retcode(EASY_OK), cache_table_num(tdhs_cache_table_num_for_thd),
+        already_cached_table_num(0), opened_table_num(0), last_opened_table_num(0),
+        current_table(NULL),need_close_cached_table(false) {
 }
 tdhs_dbcontext::~tdhs_dbcontext() {
 }
@@ -280,6 +284,14 @@ time_t* tdhs_dbcontext::get_thd_time() {
 	return &thd->start_time;
 }
 
+bool tdhs_dbcontext::need_close_table(){
+    return need_close_cached_table;
+}
+
+void tdhs_dbcontext::set_need_close_table(bool need){
+    need_close_cached_table = need;
+}
+
 void tdhs_dbcontext::open_table(tdhs_request_t &req) {
 	//MARK 针对request type 需要进行判断,不需要open table的直接退出
 	if (req.type == REQUEST_TYPE_BATCH) {
@@ -336,7 +348,10 @@ void tdhs_dbcontext::open_table(tdhs_request_t &req) {
 					} else {
 						opened_table_num++;
 					}
-				}
+                } else {
+                    //下次loop的时候 会close table 防止 创建相同名字的表的时候会hang
+                   set_need_close_table(true);
+                }
 			} else {
 				//if opened_table==NULL because of memory is not enough
 				easy_error_log(
