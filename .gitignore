@@ -20,3 +20,5 @@
 /TDH_Socket.creator
 /TDH_Socket.files
 /TDH_Socket.includes
+*.pyc
+*.iml
