@@ -37,7 +37,7 @@ TDHS_GT = 3     # >
 TDHS_LT = 4     # <
 TDHS_IN = 5     # in
 TDHS_DEQ = 6    # = for desc
-
+TDHS_BETWEEN = 7    # between
 
 #filter flag
 TDHS_FILTER_EQ = 0     # =

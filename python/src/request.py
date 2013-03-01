@@ -104,7 +104,7 @@ class get:
     def is_vaild(self):
         if self.table_info.is_vaild() and self.key and self.key is not None and len(self.key) > 0\
            and self.limit is not None and self.find_flag is not None and self.find_flag >= TDHS_EQ\
-        and self.find_flag <= TDHS_DEQ:
+        and self.find_flag <= TDHS_BETWEEN:
             return True
         else:
             return False
