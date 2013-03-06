@@ -125,7 +125,7 @@ struct easy_io_thread_t {
     easy_list_t             request_list;
 
     // listen watcher
-    ev_timer                listen_watcher;
+    ev_async                listen_watcher;
     easy_io_uthread_start_pt *on_utstart;
     void                    *ut_args;
 
@@ -316,6 +316,8 @@ struct easy_io_t {
     ev_tstamp               start_time;
     easy_atomic_t           send_byte;
     easy_atomic_t           recv_byte;
+
+    easy_atomic_t           connect_num;
 };
 
 // base thread

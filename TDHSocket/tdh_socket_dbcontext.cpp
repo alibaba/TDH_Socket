@@ -85,6 +85,9 @@ public:
 	virtual void using_stream();
 	virtual void set_group_commit(bool gc);
 	virtual time_t* get_thd_time();
+
+    virtual bool need_close_table();
+    virtual void set_need_close_table(bool need);
 #ifdef TDHS_ROW_CACHE
 	virtual bool is_in_cache(tdhs_request_t &req);
 #endif
@@ -98,6 +101,8 @@ private:
 	int do_insert(easy_request_t *req);
 	int do_batch(easy_request_t *req);
 	int do_batch_with_lock(easy_request_t *req);
+
+    void set_process_info(uint32_t id ,easy_request_t *req);
 
 private:
 	tdhs_optimize_t type;
@@ -122,13 +127,16 @@ private:
 	unsigned int last_opened_table_num;
 	TABLE* need_lock_tables[DBCONTEXT_MAX_CACHE_LOCK_TABLES];
 	TABLE* current_table;
+
+    char process_info[MAX_INFO_SIZE];
+    bool need_close_cached_table;
 };
 
 tdhs_dbcontext::tdhs_dbcontext() :
-		write_error(0), use_stream_count(0), bulk(true), in_batch(false), retcode(
-				EASY_OK), cache_table_num(tdhs_cache_table_num_for_thd), already_cached_table_num(
-				0), opened_table_num(0), last_opened_table_num(0), current_table(
-				NULL) {
+        write_error(0), use_stream_count(0), bulk(true), in_batch(false),
+        retcode(EASY_OK), cache_table_num(tdhs_cache_table_num_for_thd),
+        already_cached_table_num(0), opened_table_num(0), last_opened_table_num(0),
+        current_table(NULL),need_close_cached_table(false) {
 }
 tdhs_dbcontext::~tdhs_dbcontext() {
 }
@@ -259,6 +267,13 @@ void tdhs_dbcontext::using_stream() {
 	set_thread_message(info, "TDHS:send stream[%lu]", ++use_stream_count);
 }
 
+void tdhs_dbcontext::set_process_info(uint32_t id ,easy_request_t *req){
+    char buffer[32];
+    int len = snprintf(process_info, sizeof(process_info), "from:[%s] id:[%d]",
+             easy_inet_addr_to_str(&req->ms->c->addr, buffer, 32) ,id);
+    thd->set_query(process_info, len);
+}
+
 void tdhs_dbcontext::set_group_commit(bool gc) {
 	if (need_write()) {
 		bulk = gc;
@@ -267,6 +282,14 @@ void tdhs_dbcontext::set_group_commit(bool gc) {
 
 time_t* tdhs_dbcontext::get_thd_time() {
 	return &thd->start_time;
+}
+
+bool tdhs_dbcontext::need_close_table(){
+    return need_close_cached_table;
+}
+
+void tdhs_dbcontext::set_need_close_table(bool need){
+    need_close_cached_table = need;
 }
 
 void tdhs_dbcontext::open_table(tdhs_request_t &req) {
@@ -325,7 +348,10 @@ void tdhs_dbcontext::open_table(tdhs_request_t &req) {
 					} else {
 						opened_table_num++;
 					}
-				}
+                } else {
+                    //下次loop的时候 会close table 防止 创建相同名字的表的时候会hang
+                   set_need_close_table(true);
+                }
 			} else {
 				//if opened_table==NULL because of memory is not enough
 				easy_error_log(
@@ -443,14 +469,12 @@ void tdhs_dbcontext::close_table() {
 }
 
 void tdhs_dbcontext::close_cached_table() {
-//	tb_assert(tdhs_cache_table_on==0);
-	tb_assert(opened_table_num==0);tb_assert(lock==NULL);
-	if (already_cached_table_num > 0) {
-		easy_debug_log("TDHS:close_cached_table [%d]",
-				already_cached_table_num);
-		tdhs_close_table(thd);
-		already_cached_table_num = 0;
-	}
+    //	tb_assert(tdhs_cache_table_on==0);
+    tb_assert(opened_table_num==0);tb_assert(lock==NULL);
+    easy_debug_log("TDHS:close_cached_table [%d]",
+                   already_cached_table_num);
+    tdhs_close_table(thd);
+    already_cached_table_num = 0;
 }
 
 class table_locker_for_context: private noncopyable {
@@ -485,6 +509,7 @@ private:
 int tdhs_dbcontext::execute(easy_request_t *r) {
 	tdhs_client_wait_t client_wait = { false, false, false, this, { 0 } }; //for stream
 	tdhs_packet_t *packet = (tdhs_packet_t*) ((r->ipacket));
+    uint32_t seq_id = packet->seq_id;
 	tdhs_request_t &request = packet->req;
 	retcode = EASY_OK;
 	if (thd->killed != THD::NOT_KILLED) {
@@ -492,6 +517,7 @@ int tdhs_dbcontext::execute(easy_request_t *r) {
 		thd->killed = THD::NOT_KILLED;
 	}
 	thd->clear_error();
+    set_process_info(seq_id, r);
 	int ret;
 	switch (request.type) {
 	case REQUEST_TYPE_GET:
@@ -558,6 +584,7 @@ int tdhs_dbcontext::execute(easy_request_t *r) {
 		easy_info_log("[%d] need switch to NO_KILLED at end!", thd->killed);
 		thd->killed = THD::NOT_KILLED;
 	}
+    thd->reset_query();
 	return retcode != EASY_OK ? retcode : ret;
 }
 
@@ -609,6 +636,7 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 		find_flag = HA_READ_KEY_EXACT;
 		break;
 	case TDHS_GE:
+    case TDHS_BETWEEN:
 		find_flag = HA_READ_KEY_OR_NEXT;
 		break;
 	case TDHS_LE:
@@ -651,9 +679,15 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 	}
 	//filter init end
 	{
+        key_range between_start_key;
+        key_range between_end_key;
+
 		KEY& kinfo = tdhs_table.table->key_info[tdhs_table.idxnum];
 		stack_liker _key_buf_stack(kinfo.key_length);
+        stack_liker _key_buf_stack_for_between_end(kinfo.key_length);
+
 		uchar * const key_buf = (uchar *) _key_buf_stack.get_ptr();
+        uchar * const key_buf_for_between_end = (uchar *) _key_buf_stack_for_between_end.get_ptr();
 		if (key_buf == NULL) {
 			return tdhs_response_error(response, CLIENT_STATUS_SERVER_ERROR,
 					CLIENT_ERROR_CODE_NOT_ENOUGH_MEMORY);
@@ -679,6 +713,38 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 		size_t key_len_sum = prepare_keybuf(request.get.keys[in_index].key,
 				request.get.keys[in_index].key_field_num, key_buf,
 				tdhs_table.table, kinfo);
+
+        if(request.get.find_flag==TDHS_BETWEEN){
+           between_start_key.key = key_buf;
+           between_start_key.length = key_len_sum;
+           between_start_key.keypart_map = (1U
+                                            << request.get.keys[in_index].key_field_num) - 1;
+           between_start_key.flag = find_flag;
+
+           if (key_buf_for_between_end == NULL) {
+               return tdhs_response_error(response, CLIENT_STATUS_SERVER_ERROR,
+                       CLIENT_ERROR_CODE_NOT_ENOUGH_MEMORY);
+           }
+
+           //默认取第二个key 作为范围查询的结束key
+           if ((ret = parse_index(tdhs_table, request.get.keys[1].key,
+                   request.get.keys[1].key_field_num))
+                   != TDHS_PARSE_INDEX_DONE) {
+               return tdhs_response_error(response, CLIENT_STATUS_NOT_FOUND,
+                       static_cast<tdhs_client_error_code_t>(ret));
+           }
+
+           size_t key_len_sum_for_between_end = prepare_keybuf(request.get.keys[1].key,
+                   request.get.keys[1].key_field_num, key_buf_for_between_end,
+                   tdhs_table.table, kinfo);
+
+           between_end_key.key = key_buf_for_between_end;
+           between_end_key.length = key_len_sum_for_between_end;
+           between_end_key.keypart_map = (1U
+                                            << request.get.keys[1].key_field_num) - 1;
+           between_end_key.flag = HA_READ_KEY_EXACT; //确保最后为<=
+
+        }
 
 		/* handler */
 		tdhs_table.table->read_set = &tdhs_table.table->s->all_set;
@@ -708,7 +774,11 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 				if (request.get.find_flag == TDHS_DEQ) {
 					r = hnd->index_read_last_map(tdhs_table.table->record[0],
 							key_buf, kpm);
-				} else {
+                }else if(request.get.find_flag==TDHS_BETWEEN){
+                    r = hnd->read_range_first(&between_start_key,
+                                              &between_end_key,
+                                              0, 1);
+                }else {
 					r = hnd->index_read_map(tdhs_table.table->record[0],
 							key_buf, kpm, find_flag);
 				}
@@ -720,7 +790,11 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 					break;
 				case HA_READ_AFTER_KEY:
 				case HA_READ_KEY_OR_NEXT:
-					r = hnd->index_next(tdhs_table.table->record[0]);
+                    if(request.get.find_flag==TDHS_BETWEEN){
+                        r = hnd->read_range_next();
+                    }else{
+                        r = hnd->index_next(tdhs_table.table->record[0]);
+                    }
 					break;
 				case HA_READ_KEY_EXACT:
 					if (request.get.find_flag == TDHS_DEQ) {

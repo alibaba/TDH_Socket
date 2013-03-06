@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([TDH_Socket_Plugin_for_MySQL], [0.4])
+AC_INIT([TDH_Socket_Plugin_for_MySQL], [0.5])
 
 #init
 
@@ -28,6 +28,7 @@ CXXFLAGS="$PRESET_CXXFLAGS -D_GNU_SOURCE -D__STDC_LIMIT_MACROS"
 CXXFLAGS="$CXXFLAGS -Wall -fno-rtti -fno-exceptions -fPIC -DPIC" 
 
 AC_CHECK_LIB([pthread], [main])
+AC_CHECK_LIB([tcmalloc], [main])
 
 EASY_INCLUDES="-I`pwd`/libeasy/include/ -I`pwd`/libeasy/memory -I`pwd`/libeasy/util/"
 EASY_INCLUDES="$EASY_INCLUDES -I`pwd`/libeasy/thread/ -I`pwd`/libeasy/io/ -I`pwd`/libeasy/packet/ -I`pwd`/libeasy/packet/http -I."

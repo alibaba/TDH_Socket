@@ -439,15 +439,27 @@ static void easy_connection_on_accept(struct ev_loop *loop, ev_io *w, int revent
         ev_timer_again(c->loop, &c->timeout_watcher);
     }
 
+
+    easy_atomic_add(&ioth->eio->connect_num, 1);
+    int th_idx = (ioth->eio->connect_num) % (ioth->eio->io_thread_count);
+    th_idx = th_idx<0 ? (0-th_idx) : th_idx;
     // 让出来给其他的线程
     if (ioth->eio->listen_all == 0 && listen->old_ioth == NULL
             && listen->curr_ioth == ioth) {
+        easy_io_thread_t *nextth;
         listen->old = listen->cur;
         listen->curr_ioth = NULL;
-        listen->old_ioth = ioth;
-        ioth->listen_watcher.repeat = 0.5;
-        ev_timer_again (ioth->loop, &ioth->listen_watcher);
+        //listen->old_ioth = ioth;
+        //ioth->listen_watcher.repeat = 0.5;
+        ev_io_stop(ioth->loop, &listen->read_watcher[listen->old]);
+        listen->old_ioth = NULL;
+        nextth = easy_thread_pool_index(ioth->eio->io_thread_pool,th_idx);
         easy_unlock(&listen->listen_lock);
+
+        ev_async_send(nextth->loop, &nextth->listen_watcher);
+
+        //ev_timer_again (ioth->loop, &ioth->listen_watcher);
+
     }
 
     // start read
@@ -512,7 +524,7 @@ static void easy_connection_redispatch_thread(easy_connection_t *c)
 /**
  * 切换listen
  */
-void easy_connection_on_listen(struct ev_loop *loop, ev_timer *w, int revents)
+void easy_connection_on_listen(struct ev_loop *loop, ev_async *w, int revents)
 {
     easy_listen_t               *l;
     easy_io_thread_t            *ioth;
@@ -530,12 +542,9 @@ void easy_connection_on_listen(struct ev_loop *loop, ev_timer *w, int revents)
                 l->cur = ((l->cur + 1) & 1);
                 ev_io_start(ioth->loop, &l->read_watcher[l->cur]);
                 l->curr_ioth = ioth;
-                ioth->listen_watcher.repeat = 60.;
-                ev_timer_again (ioth->loop, &ioth->listen_watcher);
+//                ioth->listen_watcher.repeat = 60.;
+//                ev_timer_again (ioth->loop, &ioth->listen_watcher);
             }
-        } else if (l->curr_ioth && l->old_ioth == ioth) {
-            ev_io_stop(ioth->loop, &l->read_watcher[l->old]);
-            l->old_ioth = NULL;
         }
     }
 }
