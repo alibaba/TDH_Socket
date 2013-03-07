@@ -150,7 +150,10 @@ static TDHS_INLINE int _decode_to_get(tdhs_request_t & req, uint32_t &read_len,
 			for (uint32_t j = 0; j < one_key.key_field_num; j++) {
 				tdhs_string_t& key = one_key.key[j];
 				read_uint32_ref(key.len, pos, read_len);
-				read_str_ref(key.str, pos, read_len, key.len);
+
+                                easy_warn_log("key.len %d\n", key.len);
+                                if (key.len)
+        				read_str_ref(key.str, pos, read_len, key.len);
 			}
 		} else {
 			//skip too many field
@@ -172,7 +175,7 @@ static TDHS_INLINE int _decode_to_get(tdhs_request_t & req, uint32_t &read_len,
 	read_uint32_ref(req.get.start, pos, read_len);
 	read_uint32_ref(req.get.limit, pos, read_len);
 
-    if(req.get.key_num<2 && req.get.find_flag == TDHS_BETWEEN){
+    if(req.get.key_num<2 && (req.get.find_flag == TDHS_BETWEEN || req.get.find_flag == TDHS_DBETWEEN)){
         easy_warn_log("TDHS:too few keys where flag is between condition!");
         return ERROR_OUT_OF_IN;
     }
