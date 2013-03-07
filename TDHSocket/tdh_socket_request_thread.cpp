@@ -264,6 +264,12 @@ static void tdhs_request_on_wakeup(struct ev_loop *loop, ev_async *w,
 
 		tdhs_request_doreq_for_read(th, &request_list);
 	}
+
+    if (dbcontext->need_close_table()) {
+        easy_debug_log("TDHS:need close table ,close_cached_table");
+        dbcontext->close_cached_table();
+        dbcontext->set_need_close_table(false);
+    }
 }
 
 // 自己定义start

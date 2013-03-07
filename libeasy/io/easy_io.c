@@ -72,7 +72,7 @@ easy_io_t *easy_eio_create(easy_io_t *eio, int io_thread_count)
 
     eio->io_thread_pool = tp;
     eio->tcp_nodelay = 1;
-    eio->affinity_enable = 0;
+    eio->affinity_enable = 1;
 
     // 初始化线程池
     easy_thread_pool_for_each(ioth, tp, 0) {
@@ -86,7 +86,8 @@ easy_io_t *easy_eio_create(easy_io_t *eio, int io_thread_count)
         easy_list_init(&ioth->session_list);
         easy_list_init(&ioth->request_list);
 
-        ev_timer_init (&ioth->listen_watcher, easy_connection_on_listen, 0.0, 0.5);
+        ev_async_init (&ioth->listen_watcher, easy_connection_on_listen);
+        //ev_timer_init (&ioth->listen_watcher, easy_connection_on_listen, 0.0, 0.5);
         ioth->listen_watcher.data = ioth;
         ioth->iot = 1;
 
@@ -323,7 +324,9 @@ static void *easy_io_on_thread_start(void *args)
             for (l = eio->listen; l; l = l->next)
                 ev_io_start(ioth->loop, &l->read_watcher[ioth->idx]);
         } else {
-            ev_timer_start (ioth->loop, &ioth->listen_watcher);
+            ev_async_start (ioth->loop, &ioth->listen_watcher);
+            ev_async_send(ioth->loop, &ioth->listen_watcher);
+            //ev_timer_start (ioth->loop, &ioth->listen_watcher);
         }
     }
 
