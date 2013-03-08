@@ -238,6 +238,7 @@ typedef enum {
 	TDHS_IN = 5, // in
 	TDHS_DEQ = 6, // = for desc
     TDHS_BETWEEN = 7, //between
+    TDHS_DBETWEEN = 8, //between scan desc
 	TDHS_READ_END
 } tdhs_find_flag_t;
 
