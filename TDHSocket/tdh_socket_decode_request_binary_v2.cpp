@@ -190,7 +190,7 @@ static TDHS_INLINE int _decode_to_get(tdhs_request_t & req,
 		return ERROR_OUT_OF_IN;
 	}
 
-    if(req.get.key_num<2 && req.get.find_flag == TDHS_BETWEEN){
+    if(req.get.key_num<2 && req.get.find_flag == TDHS_BETWEEN || req.get.find_flag == TDHS_DBETWEEN){
         easy_warn_log("TDHS:too few keys where flag is between condition!");
         return ERROR_OUT_OF_IN;
     }

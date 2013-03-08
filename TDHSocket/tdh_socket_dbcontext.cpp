@@ -803,7 +803,7 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
              between_end_key.length = key_len_sum_for_between_end;
              between_end_key.keypart_map = (1U
                  << request.get.keys[1].key_field_num) - 1;
-             between_end_key.flag = HA_READ_KEY_EXACT; //确保最后为<=
+             between_end_key.flag = HA_READ_KEY_OR_PREV; //确保最后为<=
            }
 
         }
