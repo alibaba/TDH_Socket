@@ -151,7 +151,6 @@ static TDHS_INLINE int _decode_to_get(tdhs_request_t & req, uint32_t &read_len,
 				tdhs_string_t& key = one_key.key[j];
 				read_uint32_ref(key.len, pos, read_len);
 
-                                easy_warn_log("key.len %d\n", key.len);
                                 if (key.len)
         				read_str_ref(key.str, pos, read_len, key.len);
 			}

@@ -588,50 +588,6 @@ int tdhs_dbcontext::execute(easy_request_t *r) {
 	return retcode != EASY_OK ? retcode : ret;
 }
 
-TDHS_INLINE int hnd_read_range_last(handler * const hnd, TABLE *table, const key_range *start_key,
-			      const key_range *end_key,
-			      bool eq_range_arg, bool sorted)
-{
-  int result;
-  
-  hnd->eq_range= eq_range_arg;
-  hnd->end_range= 0;
-  if (start_key)
-  {
-    hnd->end_range= &hnd->save_end_range;
-    hnd->save_end_range= *start_key;
-    hnd->key_compare_result_on_equal= 0;
-  }
-
-  hnd->range_key_part= table->key_info[hnd->active_index].key_part;
-
-  if (!end_key)
-    result= hnd->index_last(table->record[0]);
-  else
-    result= hnd->index_read_map(table->record[0],
-                                end_key->key,
-                                end_key->keypart_map,
-                                end_key->flag);
-
-  if (result)
-    return ((result == HA_ERR_KEY_NOT_FOUND) ? HA_ERR_END_OF_FILE : result);
-
-  return hnd->compare_key(hnd->end_range) >= 0 ? 0 : HA_ERR_END_OF_FILE;
-}
-
-TDHS_INLINE int hnd_read_range_prev(handler * const hnd, TABLE *table)
-{
-  int result;
-
-  result= hnd->index_prev(table->record[0]);
-
-  if (result)
-    return result;
-
-  return (hnd->compare_key(hnd->end_range) >= 0 ? 0 : HA_ERR_END_OF_FILE);
-}
-
-
 TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
 		tdhs_client_wait_t &client_wait,
 		create_response_handler_t *create_handler,
@@ -803,7 +759,7 @@ TDHS_INLINE int tdhs_dbcontext::do_find(easy_request_t *req,
              between_end_key.length = key_len_sum_for_between_end;
              between_end_key.keypart_map = (1U
                  << request.get.keys[1].key_field_num) - 1;
-             between_end_key.flag = HA_READ_KEY_EXACT; //确保最后为<=
+             between_end_key.flag = HA_READ_KEY_OR_PREV; //确保最后为<=
            }
 
         }
