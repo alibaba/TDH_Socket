@@ -677,7 +677,7 @@ static TDHS_INLINE int update_record(tdhs_table_t& tdhs_table,
 			} else {
 				fld->set_notnull();
 				if (fld->store(value.str, value.strlen(), &my_charset_bin)
-						< 0) {
+                        != 0) {
 					easy_error_log("TDHS:update store error!");
 					*process_db_ret = FIELD_STORE_ERROR;
 //					*write_error = 1;
@@ -689,7 +689,7 @@ static TDHS_INLINE int update_record(tdhs_table_t& tdhs_table,
 			pval = fld->val_int();
 			llv = value.len == 0 ? 0 : atoll(value.str);
 			nval = pval + llv;
-			if (fld->store(nval, false) < 0) {
+            if (fld->store(nval, false) != 0) {
 				easy_error_log("TDHS:update store error!");
 				*process_db_ret = FIELD_STORE_ERROR;
 //				*write_error = 1;
@@ -700,7 +700,7 @@ static TDHS_INLINE int update_record(tdhs_table_t& tdhs_table,
 			pval = fld->val_int();
 			llv = value.len == 0 ? 0 : atoll(value.str);
 			nval = pval - llv;
-			if (fld->store(nval, false) < 0) {
+            if (fld->store(nval, false) != 0) {
 				easy_error_log("TDHS:update store error!");
 				*process_db_ret = FIELD_STORE_ERROR;
 //				*write_error = 1;

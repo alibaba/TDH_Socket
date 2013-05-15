@@ -966,7 +966,7 @@ TDHS_INLINE int tdhs_dbcontext::do_insert(easy_request_t *req) {
 			} else {
 				fld->set_notnull();
 				if (fld->store(value.str, value.strlen(), &my_charset_bin)
-						< 0) {
+                        != 0) {
 					easy_error_log(
 							"TDHS:insert store error,field:[%s],value:[%s]",
 							fld->field_name, value.str_print());
@@ -977,7 +977,7 @@ TDHS_INLINE int tdhs_dbcontext::do_insert(easy_request_t *req) {
 			}
 			break;
 		case TDHS_UPDATE_NOW:
-			if (save_now(tdhs_table.thd, fld) < 0) {
+            if (save_now(tdhs_table.thd, fld) != 0) {
 				easy_error_log(
 						"TDHS:insert store error,field:[%s],value:[now()]",
 						fld->field_name);
