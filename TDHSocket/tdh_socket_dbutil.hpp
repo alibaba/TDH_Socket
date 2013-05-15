@@ -655,7 +655,7 @@ static TDHS_INLINE int create_response_for_count(tdhs_table_t& tdhs_table,
 #define FIELD_STORE_ERROR 198
 
 static TDHS_INLINE int update_record(tdhs_table_t& tdhs_table,
-		easy_request_t *req, tdhs_client_wait_t &client_wait,
+        easy_request_t  *req, tdhs_client_wait_t &client_wait,
 		int *process_db_ret, int *write_error) {
 	tdhs_packet_t *packet = (tdhs_packet_t*) ((req->ipacket));
 	tdhs_request_t &request = packet->req;
@@ -676,7 +676,7 @@ static TDHS_INLINE int update_record(tdhs_table_t& tdhs_table,
 				fld->set_null();
 			} else {
 				fld->set_notnull();
-				if (fld->store(value.str, value.strlen(), &my_charset_bin)
+                if (fld->store(value.str, value.strlen(), &my_charset_bin , CHECK_FIELD_WARN)
                         != 0) {
 					easy_error_log("TDHS:update store error!");
 					*process_db_ret = FIELD_STORE_ERROR;

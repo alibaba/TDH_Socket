@@ -965,7 +965,7 @@ TDHS_INLINE int tdhs_dbcontext::do_insert(easy_request_t *req) {
 				fld->set_null();
 			} else {
 				fld->set_notnull();
-				if (fld->store(value.str, value.strlen(), &my_charset_bin)
+                if (fld->store(value.str, value.strlen(), &my_charset_bin, CHECK_FIELD_WARN)
                         != 0) {
 					easy_error_log(
 							"TDHS:insert store error,field:[%s],value:[%s]",
